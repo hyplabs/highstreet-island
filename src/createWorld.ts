@@ -221,12 +221,14 @@ export function CreateWorld(
   const renderer = new WebGLRenderer({
     canvas: canvas,
     antialias: true,
+    alpha: true,
   });
+  renderer.setClearColor(0x000000, 0); // the default
 
   renderer.outputEncoding = sRGBEncoding;
   renderer.gammaFactor = 2.2;
 
-  scene.background = new Color(0xe4cece); // pink
+  // scene.background = new Color(0xe4cece); // pink
 
   // Hemisphere light for subtle gradient
   scene.add(
