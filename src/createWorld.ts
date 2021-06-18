@@ -10,7 +10,7 @@ import {
   PerspectiveCamera,
   Scene,
   sRGBEncoding,
-  Vector3,
+  // Vector3,
   WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -170,21 +170,20 @@ export function CreateWorld(
     const rocketY = new ProportionalController(50, 10, 0);
     const rocketZ = new ProportionalController(50, 10, 0);
 
-    const cacheProjectVec = new Vector3();
-
-    parent.addEventListener('click', e => {
-      //
-      const screenX = (e.pageX - parent.offsetLeft) / parent.clientWidth;
-      const screenY = (e.pageY - parent.clientTop) / parent.clientHeight;
-      //
-      const ndc_x = screenX * 2 - 1;
-      const ndc_y = -(screenY * 2 - 1);
-
-      cacheProjectVec.set(ndc_x, ndc_y, 0.999).unproject(camera);
-      rocketX.setDesired(cacheProjectVec.x);
-      rocketY.setDesired(cacheProjectVec.y);
-      rocketZ.setDesired(cacheProjectVec.z);
-    });
+    // const cacheProjectVec = new Vector3();
+    // parent.addEventListener('click', e => {
+    //   //
+    //   const screenX = (e.pageX - parent.offsetLeft) / parent.clientWidth;
+    //   const screenY = (e.pageY - parent.clientTop) / parent.clientHeight;
+    //   //
+    //   const ndc_x = screenX * 2 - 1;
+    //   const ndc_y = -(screenY * 2 - 1);
+    //
+    //   cacheProjectVec.set(ndc_x, ndc_y, 0.999).unproject(camera);
+    //   rocketX.setDesired(cacheProjectVec.x);
+    //   rocketY.setDesired(cacheProjectVec.y);
+    //   rocketZ.setDesired(cacheProjectVec.z);
+    // });
 
     const rocketAnimation = (() => {
       // rocking island animation
