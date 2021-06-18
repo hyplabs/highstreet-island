@@ -1,18 +1,13 @@
+import {Color, DirectionalLight, HemisphereLight, PerspectiveCamera, Scene, sRGBEncoding, WebGLRenderer} from "three"
+import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
+import {degToRad} from "three/src/math/MathUtils";
 
-import {
-    BoxBufferGeometry,
-    Color,
-    Mesh,
-    MeshBasicMaterial,
-    PerspectiveCamera,
-    Scene,
-    Vector3,
-    WebGLRenderer
-} from "three"
-export function CreateWorld(canvas: HTMLCanvasElement, parent: HTMLDivElement){
+export type WorldConfig = {
+    gltfPath: string
+}
+
+export function CreateWorld(canvas: HTMLCanvasElement, parent: HTMLDivElement, config: WorldConfig){
     const camera = new PerspectiveCamera();
-
-
     //AXIS FOR OUR WORLD
 
     // X -> Inward toward island
@@ -31,11 +26,11 @@ export function CreateWorld(canvas: HTMLCanvasElement, parent: HTMLDivElement){
 
         camera.aspect = w/h;
         camera.fov = 70;
+        // camera.rotation.setFromVector3(new Vector3(-Math.PI, 0, -Math.PI))
+        camera.position.set(-80, 25, 0)
+        camera.rotateY(degToRad(-90));
         camera.updateProjectionMatrix();
 
-        camera.position.set(-40, 0, 0)
-
-        camera.lookAt(new Vector3(0, 0, 0));
     }
 
     //@ts-ignore for some reason ts complains ResizeObserver not found
@@ -43,21 +38,46 @@ export function CreateWorld(canvas: HTMLCanvasElement, parent: HTMLDivElement){
     resizeObserver.observe(canvas);
 
     const scene = new Scene();
+    const loader = new GLTFLoader();
+    console.log("LOADER", loader);
+
+    (async () => {
+        const gltf = await loader.loadAsync(config.gltfPath);
+        console.log(gltf.scene);
+        scene.add(gltf.scene);
+
+        const island = gltf.scene.getObjectByName('Island_v2');
+        console.assert(island);
+            island?.rotateY(degToRad(180));
+
+
+    })();
 
     const renderer = new WebGLRenderer({
-        canvas: canvas
+        canvas: canvas,
+        antialias: true
     })
 
-    const box = new BoxBufferGeometry();
-    const material = new MeshBasicMaterial();
+    renderer.outputEncoding = sRGBEncoding;
+    renderer.gammaFactor = 2.2;
 
-    material.color = new Color(1, 0, 0)
+    scene.background = new Color(0xe4cece); // pink
 
-    const mesh = new Mesh(box, material);
-    mesh.position.set(0, 0, 0);
-    mesh.scale.set(20, 20, 20);
-    // mesh.scale.set()
-    scene.add(mesh);
+    // Hemisphere light for subtle gradient
+    scene.add(new HemisphereLight(
+        new Color(0xb6daed), //sky blue,
+        new Color(0xdfcb9b), //tan,
+        1
+    ));
+
+    // Directional light
+    const directionalLight = new DirectionalLight(
+        new Color(0xFFFFFF), // white
+        1
+    );
+
+    directionalLight.position.set(-8, 29, -25)
+    scene.add(directionalLight);
 
     // render loop
     let frameHandle = 0;
