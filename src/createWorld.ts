@@ -12,6 +12,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
+import { LogoGradientMaterial } from './shaders/logo';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -64,6 +65,20 @@ export function CreateWorld(
     island.rotateY(degToRad(180));
 
     const entities = entityExtractors(island);
+
+    // use custom shader for logo
+    const logo = entities.land.high.obj;
+    logo.material = LogoGradientMaterial;
+
+    const gradientAnimation = (() => {
+      return {
+        update: (_: number, elapsed: number) => {
+          LogoGradientMaterial.uniforms.heightOffset.value =
+            0.2 * Math.sin(elapsed * 0.7) + 0.05;
+        },
+      };
+    })();
+
     const islandAnimation = (() => {
       // rocking island animation
       const landObj = entities.land.obj;
@@ -80,6 +95,7 @@ export function CreateWorld(
       };
     })();
     puppeteer.addAnimation(islandAnimation);
+    puppeteer.addAnimation(gradientAnimation);
   })();
 
   const renderer = new WebGLRenderer({

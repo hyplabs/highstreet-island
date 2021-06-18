@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import { Mesh, Object3D } from 'three';
 
 // enum MeshNodes {
 //     ISLAND = "ISLAND",
@@ -33,9 +33,28 @@ function getObjectByName(root: Object3D, name: string) {
 
 export function entityExtractors(root: Object3D) {
   const land = getObjectByName(root, 'Land');
+  const clouds = getObjectByName(root, 'Clouds');
   return {
     land: {
       obj: land,
+      high: {
+        obj: getObjectByName(land, 'G001') as Mesh,
+      },
+    },
+    clouds: {
+      obj: clouds,
+      left: {
+        obj: getObjectByName(clouds, 'Clouds_01'),
+      },
+      right: {
+        obj: getObjectByName(clouds, 'Clouds_04'),
+      },
+      middle: {
+        obj: getObjectByName(clouds, 'Clouds_03'),
+      },
+      top: {
+        obj: getObjectByName(clouds, 'Clouds_03'),
+      },
     },
   };
 }
