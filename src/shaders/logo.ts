@@ -1,29 +1,29 @@
 import { Color, ShaderLib, ShaderMaterial, UniformsUtils } from 'three';
 
-const VertexShader = `
-    varying vec3 vUv; 
-    varying float heightRatio;
-    uniform float heightOffset;
-    
-    void main() {
-      vUv = position;
-      float extent = 4.5; 
-      heightRatio = (position.x + extent) / (2.0 * extent) + heightOffset;
-      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * modelViewPosition; 
-    }
-`;
-
-const FragmentShader = `
-    varying vec3 vUv; 
-    varying float heightRatio; 
-    uniform vec3 colorBottom; 
-    uniform vec3 colorTop;
-    
-    void main() {
-      gl_FragColor = vec4(mix(colorBottom, colorTop, heightRatio), 1.0);
-    }
-`;
+// const VertexShader = `
+//     varying vec3 vUv;
+//     varying float heightRatio;
+//     uniform float heightOffset;
+//
+//     void main() {
+//       vUv = position;
+//       float extent = 4.5;
+//       heightRatio = (position.x + extent) / (2.0 * extent) + heightOffset;
+//       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+//       gl_Position = projectionMatrix * modelViewPosition;
+//     }
+// `;
+//
+// const FragmentShader = `
+//     varying vec3 vUv;
+//     varying float heightRatio;
+//     uniform vec3 colorBottom;
+//     uniform vec3 colorTop;
+//
+//     void main() {
+//       gl_FragColor = vec4(mix(colorBottom, colorTop, heightRatio), 1.0);
+//     }
+// `;
 
 let vertexShader = ShaderLib.standard.vertexShader
   .replace(
@@ -60,9 +60,6 @@ let fragmentShader = ShaderLib.standard.fragmentShader
     uniform vec3 colorBottom; 
     uniform vec3 colorTop;`
   );
-
-console.log(vertexShader);
-console.log(fragmentShader);
 
 export const LogoGradientMaterial = new ShaderMaterial({
   uniforms: UniformsUtils.merge([

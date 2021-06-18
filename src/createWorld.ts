@@ -4,12 +4,10 @@ import {
   Color,
   DirectionalLight,
   HemisphereLight,
-  Matrix4,
   Mesh,
-  MeshBasicMaterial,
+  MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
-  Quaternion,
   Scene,
   sRGBEncoding,
   Vector3,
@@ -21,6 +19,7 @@ import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
 import { LogoGradientMaterial } from './shaders/logo';
 import { ProportionalController } from './physics/ProportionalController';
+import { easeInOutCubic } from './util/easingFunctions';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -50,13 +49,9 @@ export function CreateWorld(
 
     camera.aspect = w / h;
     camera.fov = 70;
-    // camera.rotation.setFromVector3(new Vector3(-Math.PI, 0, -Math.PI))
     camera.position.set(-80, 25, 0);
     camera.rotateY(degToRad(-90));
     camera.updateProjectionMatrix();
-
-    const projected = new Vector3(0, 0, 0.5).unproject(camera);
-    console.log(projected.clone());
   };
 
   //@ts-ignore for some reason ts complains ResizeObserver not found
@@ -71,11 +66,28 @@ export function CreateWorld(
   // }, 1000);
 
   const scene = new Scene();
+
+  // prewarm scene while mesh loading
+  function prewarm() {
+    let boxBufferGeometry = new BoxBufferGeometry();
+    const standard = new Mesh(boxBufferGeometry, new MeshStandardMaterial());
+    const logo = new Mesh(boxBufferGeometry, LogoGradientMaterial);
+
+    standard.position.set(1000, 1000, 1000);
+    logo.position.set(1000, 1000, 1000);
+    scene.add(standard);
+    scene.add(logo);
+    console.log('PRECOMPILE SHADERS');
+    renderer.compile(scene, camera);
+
+    scene.remove(standard);
+    scene.remove(logo);
+  }
+
   const loader = new GLTFLoader();
   const puppeteer = new Puppeteer();
   (async () => {
     const gltf = await loader.loadAsync(config.gltfPath);
-    console.log(gltf.scene);
     scene.add(gltf.scene);
 
     const island = gltf.scene.getObjectByName('Island_v2');
@@ -255,6 +267,41 @@ export function CreateWorld(
       };
     })();
     puppeteer.addAnimation(giftAnimation);
+
+    //gradually fade in island
+
+    rocket.visible = false;
+
+    const fadeIn = (() => {
+      const fadeInTime = 1.3;
+      let elapsed = 0;
+      const origPosition = island.position.x;
+      const origScale = island.scale.x;
+
+      return {
+        update(dt: number) {
+          const progress = Math.min(elapsed / fadeInTime, 1);
+          // const progress = elapsed/fadeInTime;
+
+          const ratio = easeInOutCubic(progress);
+          island.position.x = (1 - ratio) * 200 + ratio * origPosition;
+          island.scale.setScalar((1 - ratio) * 0.4 + ratio * origScale);
+          if (progress === 1) {
+            //done
+            puppeteer.removeAnimation(fadeIn);
+            rocket.visible = true;
+          }
+
+          elapsed += dt;
+        },
+      };
+    })();
+
+    puppeteer.addAnimation(fadeIn);
+
+    // setTimeout(() => {
+    //   puppeteer.addAnimation(fadeIn)
+    // }, 500)
   })();
 
   const renderer = new WebGLRenderer({
@@ -296,6 +343,8 @@ export function CreateWorld(
     renderer.render(scene, camera);
   };
   animate();
+
+  prewarm();
 
   // cleanup function
   return () => {
