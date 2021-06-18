@@ -56,5 +56,8 @@ export function entityExtractors(root: Object3D) {
         obj: getObjectByName(clouds, 'Clouds_02'),
       },
     },
+    rocket: {
+      obj: getObjectByName(root, 'Rocket'),
+    },
   };
 }

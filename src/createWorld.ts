@@ -1,11 +1,17 @@
 import {
+  BoxBufferGeometry,
   Clock,
   Color,
   DirectionalLight,
-  HemisphereLight, Object3D,
+  HemisphereLight,
+  Mesh,
+  MeshBasicMaterial,
+  Object3D,
   PerspectiveCamera,
+  Quaternion,
   Scene,
   sRGBEncoding,
+  Vector3,
   WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -13,6 +19,7 @@ import { degToRad } from 'three/src/math/MathUtils';
 import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
 import { LogoGradientMaterial } from './shaders/logo';
+import { ProportionalController } from './physics/ProportionalController';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -46,11 +53,21 @@ export function CreateWorld(
     camera.position.set(-80, 25, 0);
     camera.rotateY(degToRad(-90));
     camera.updateProjectionMatrix();
+
+    const projected = new Vector3(0, 0, 0.5).unproject(camera);
+    console.log(projected.clone());
   };
 
   //@ts-ignore for some reason ts complains ResizeObserver not found
   const resizeObserver = new ResizeObserver(onResize);
   resizeObserver.observe(canvas);
+
+  // camera.updateProjectionMatrix();
+
+  // setInterval(() => {
+  //   const projected = new Vector3(0, 0, 0.5).unproject(camera)
+  //   console.log(projected.clone());
+  // }, 1000);
 
   const scene = new Scene();
   const loader = new GLTFLoader();
@@ -70,25 +87,36 @@ export function CreateWorld(
     const logo = entities.land.high.obj;
     logo.material = LogoGradientMaterial;
 
-
-    const genCloudAnimation = (dz_min: number, dz_max: number, speed: number, mesh: Object3D) => {
+    const genCloudAnimation = (
+      dz_min: number,
+      dz_max: number,
+      speed: number,
+      mesh: Object3D
+    ) => {
       const xBias = mesh.position.z;
       let elapsed = 0;
       return {
         update: (dt: number, _: number) => {
-          const sine0to1 = (Math.sin(speed * elapsed - Math.PI/2) + 1)/2;
+          const sine0to1 = (Math.sin(speed * elapsed - Math.PI / 2) + 1) / 2;
           const dx = dz_min + (dz_max - dz_min) * sine0to1;
           mesh.position.z = xBias + dx;
           elapsed += dt;
-        }
-      }
-    }
+        },
+      };
+    };
 
-    puppeteer.addAnimation(genCloudAnimation(0, -80, 0.07, entities.clouds.left.obj))
-    puppeteer.addAnimation(genCloudAnimation(0, 80, 0.03, entities.clouds.right.obj))
-    puppeteer.addAnimation(genCloudAnimation(20, -40, 0.1, entities.clouds.top.obj))
-    puppeteer.addAnimation(genCloudAnimation(-20, 40, 0.08, entities.clouds.middle.obj))
-
+    puppeteer.addAnimation(
+      genCloudAnimation(0, -80, 0.07, entities.clouds.left.obj)
+    );
+    puppeteer.addAnimation(
+      genCloudAnimation(0, 80, 0.03, entities.clouds.right.obj)
+    );
+    puppeteer.addAnimation(
+      genCloudAnimation(20, -40, 0.1, entities.clouds.top.obj)
+    );
+    puppeteer.addAnimation(
+      genCloudAnimation(-20, 40, 0.08, entities.clouds.middle.obj)
+    );
 
     const gradientAnimation = (() => {
       return {
@@ -116,6 +144,78 @@ export function CreateWorld(
     })();
     puppeteer.addAnimation(islandAnimation);
     puppeteer.addAnimation(gradientAnimation);
+
+    const rocket = entities.rocket.obj;
+
+    //extract rocket out of scene
+
+    rocket.parent = scene;
+
+    rocket.rotation.set(0, 0, 0);
+
+    const rocketX = new ProportionalController(50, 10, 0);
+    const rocketY = new ProportionalController(50, 10, 0);
+    const rocketZ = new ProportionalController(50, 10, 0);
+
+    const align = new ProportionalController(100, 39, 0);
+    const cacheProjectVec = new Vector3();
+
+    parent.addEventListener('mousemove', e => {
+      //
+      const screenX = (e.pageX - parent.offsetLeft) / parent.clientWidth;
+      const screenY = (e.pageY - parent.clientTop) / parent.clientHeight;
+      //
+      const ndc_x = screenX * 2 - 1;
+      const ndc_y = -(screenY * 2 - 1);
+
+      cacheProjectVec.set(ndc_x, ndc_y, 0.999).unproject(camera);
+      rocketX.setDesired(cacheProjectVec.x);
+      rocketY.setDesired(cacheProjectVec.y);
+      rocketZ.setDesired(cacheProjectVec.z);
+    });
+
+    const rocketAnimation = (() => {
+      // rocking island animation
+      return {
+        update: (dt: number) => {
+          rocketX.step(dt);
+          rocketY.step(dt);
+          rocketZ.step(dt);
+          rocket.position.set(
+            rocketX.getCurrent(),
+            rocketY.getCurrent(),
+            rocketZ.getCurrent()
+          );
+
+          // const distanceToRocket = rocket.position.distanceTo(new Vector3(rocketX._desired, rocketY._desired, rocketZ._desired));
+          //
+          // if(Math.round(elapsed * 2) % 2 === 0){
+          //   // console.log(distanceToRocket);
+          // }
+
+          // if(distanceToRocket > 30){
+          //   // align.setDesired(1);
+          //   const currentRocketQuaternion = rocket.quaternion.copy(rocketQuatCache);
+          //   rocket.lookAt(rocketX._desired, rocketY._desired, rocketZ._desired);
+
+          // const logit = 1/(1 + Math.pow(2, -(distanceToRocket- 1000)));
+
+          // if(logit < 0.3) return;
+          // rocket.quaternion.slerp(currentRocketQuaternion, 1 - logit);
+
+          //
+          // if(logit < 0.9){
+          //   }
+
+          // }
+          // else if(distanceToRocket < 5){
+          //   align.setDesired(0);
+          // }
+        },
+      };
+    })();
+
+    puppeteer.addAnimation(rocketAnimation);
   })();
 
   const renderer = new WebGLRenderer({
