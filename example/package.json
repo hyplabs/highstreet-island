@@ -8,7 +8,9 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
-    "react-app-polyfill": "^2.0.0"
+    "@types/stats": "^0.16.30",
+    "react-app-polyfill": "^2.0.0",
+    "stats.js": "^0.17.0"
   },
   "alias": {
     "react": "../node_modules/react",

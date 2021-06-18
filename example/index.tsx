@@ -1,8 +1,17 @@
 import 'react-app-polyfill/ie11';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {HighstreetIsland} from "../.";
+import { HighstreetIsland } from "../.";
+import Stats from "stats.js"
 
+// Display stats
+const stats = new Stats();
+document.body.appendChild( stats.dom );
+function animate() {
+    stats.update();
+    requestAnimationFrame( animate );
+}
+requestAnimationFrame( animate );
 
 const App = () => {
   return (
