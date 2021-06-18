@@ -134,7 +134,7 @@ export function CreateWorld(
     const gradientAnimation = (() => {
       return {
         update: (_: number, elapsed: number) => {
-          LogoGradientMaterial.uniforms.heightOffset.value =
+          LogoGradientMaterial.userData.heightOffset.value =
             0.2 * Math.sin(elapsed * 0.7) + 0.05;
         },
       };
