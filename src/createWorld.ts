@@ -4,6 +4,7 @@ import {
   Color,
   DirectionalLight,
   HemisphereLight,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -157,10 +158,9 @@ export function CreateWorld(
     const rocketY = new ProportionalController(50, 10, 0);
     const rocketZ = new ProportionalController(50, 10, 0);
 
-    const align = new ProportionalController(100, 39, 0);
     const cacheProjectVec = new Vector3();
 
-    parent.addEventListener('mousemove', e => {
+    parent.addEventListener('click', e => {
       //
       const screenX = (e.pageX - parent.offsetLeft) / parent.clientWidth;
       const screenY = (e.pageY - parent.clientTop) / parent.clientHeight;
@@ -216,6 +216,45 @@ export function CreateWorld(
     })();
 
     puppeteer.addAnimation(rocketAnimation);
+
+    //gift
+
+    //recenter pivot to be at the balloons
+    const parentToGift = entities.floatingGift.highstreet.obj.matrix
+      .clone()
+      .invert();
+    entities.floatingGift.obj.children.forEach(child => {
+      child.applyMatrix4(parentToGift);
+    });
+
+    const balloonController = new ProportionalController(3, 10, 0);
+
+    const giftAnimation = (() => {
+      // rocking island animation
+      const rx_bias = entities.floatingGift.obj.rotation.x;
+      const y_bias = entities.floatingGift.obj.position.y;
+      return {
+        update: (dt: number, elapsed: number) => {
+          balloonController.step(dt);
+
+          //slowly vary intensity of wind
+          const intensity = Math.cos(0.25 * elapsed);
+
+          //oscillate roughly sinusoidal
+          balloonController.setDesired(
+            degToRad(intensity * 15) *
+              (Math.sin(0.5 * elapsed) +
+                0.3 * Math.sin(elapsed) +
+                0.1 * Math.sin(2 * elapsed))
+          );
+          entities.floatingGift.obj.rotation.x =
+            rx_bias + balloonController.step(dt);
+          entities.floatingGift.obj.position.y =
+            y_bias + intensity * 2 * Math.sin(elapsed);
+        },
+      };
+    })();
+    puppeteer.addAnimation(giftAnimation);
   })();
 
   const renderer = new WebGLRenderer({
