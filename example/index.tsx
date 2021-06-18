@@ -8,8 +8,8 @@ const App = () => {
   return (
     <div className='container'>
       <HighstreetIsland style={{
-        width: 500,
-        height: 400
+        width: 1000,
+        height: 800
       }} worldConfig={{
         gltfPath: "island.glb"
       }}/>

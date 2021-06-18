@@ -1,4 +1,5 @@
 import {
+  Clock,
   Color,
   DirectionalLight,
   HemisphereLight,
@@ -9,6 +10,8 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { degToRad } from 'three/src/math/MathUtils';
+import { entityExtractors } from './entityExtractor';
+import { Puppeteer } from './Puppeteer';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -50,16 +53,33 @@ export function CreateWorld(
 
   const scene = new Scene();
   const loader = new GLTFLoader();
-  console.log('LOADER', loader);
-
+  const puppeteer = new Puppeteer();
   (async () => {
     const gltf = await loader.loadAsync(config.gltfPath);
     console.log(gltf.scene);
     scene.add(gltf.scene);
 
     const island = gltf.scene.getObjectByName('Island_v2');
-    console.assert(island);
-    island?.rotateY(degToRad(180));
+    if (!island) throw new Error('Mesh not found');
+    island.rotateY(degToRad(180));
+
+    const entities = entityExtractors(island);
+    const islandAnimation = (() => {
+      // rocking island animation
+      const landObj = entities.land.obj;
+      const yBias = landObj.position.y;
+      const rx_bias = landObj.rotation.x;
+      return {
+        update: (_: number, elapsed: number) => {
+          // multiply sin waves for more complex effect
+          const ySignal =
+            0.6 * Math.sin(0.9 * elapsed) * Math.sin(1.3 * elapsed);
+          landObj.position.y = yBias + ySignal;
+          landObj.rotation.x = rx_bias + degToRad(1) * Math.sin(0.5 * elapsed);
+        },
+      };
+    })();
+    puppeteer.addAnimation(islandAnimation);
   })();
 
   const renderer = new WebGLRenderer({
@@ -91,9 +111,11 @@ export function CreateWorld(
   scene.add(directionalLight);
 
   // render loop
+  const clock = new Clock();
   let frameHandle = 0;
   const animate = function() {
     frameHandle = requestAnimationFrame(animate);
+    puppeteer.render(clock.getDelta(), clock.getElapsedTime());
     renderer.render(scene, camera);
   };
   animate();
