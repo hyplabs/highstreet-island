@@ -76,7 +76,7 @@ export function CreateWorld(
       let elapsed = 0;
       return {
         update: (dt: number, _: number) => {
-          const sine0to1 = (Math.sin(speed * elapsed) + 1)/2;
+          const sine0to1 = (Math.sin(speed * elapsed - Math.PI/2) + 1)/2;
           const dx = dz_min + (dz_max - dz_min) * sine0to1;
           mesh.position.z = xBias + dx;
           elapsed += dt;
@@ -85,7 +85,7 @@ export function CreateWorld(
     }
 
     puppeteer.addAnimation(genCloudAnimation(0, -80, 0.07, entities.clouds.left.obj))
-    puppeteer.addAnimation(genCloudAnimation(-  80, 0, 0.05, entities.clouds.right.obj))
+    puppeteer.addAnimation(genCloudAnimation(0, 80, 0.03, entities.clouds.right.obj))
     puppeteer.addAnimation(genCloudAnimation(20, -40, 0.1, entities.clouds.top.obj))
     puppeteer.addAnimation(genCloudAnimation(-20, 40, 0.08, entities.clouds.middle.obj))
 
