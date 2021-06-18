@@ -53,7 +53,7 @@ export function entityExtractors(root: Object3D) {
         obj: getObjectByName(clouds, 'Clouds_03'),
       },
       top: {
-        obj: getObjectByName(clouds, 'Clouds_03'),
+        obj: getObjectByName(clouds, 'Clouds_02'),
       },
     },
   };

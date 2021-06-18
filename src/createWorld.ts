@@ -2,7 +2,7 @@ import {
   Clock,
   Color,
   DirectionalLight,
-  HemisphereLight,
+  HemisphereLight, Object3D,
   PerspectiveCamera,
   Scene,
   sRGBEncoding,
@@ -69,6 +69,26 @@ export function CreateWorld(
     // use custom shader for logo
     const logo = entities.land.high.obj;
     logo.material = LogoGradientMaterial;
+
+
+    const genCloudAnimation = (dz_min: number, dz_max: number, speed: number, mesh: Object3D) => {
+      const xBias = mesh.position.z;
+      let elapsed = 0;
+      return {
+        update: (dt: number, _: number) => {
+          const sine0to1 = (Math.sin(speed * elapsed) + 1)/2;
+          const dx = dz_min + (dz_max - dz_min) * sine0to1;
+          mesh.position.z = xBias + dx;
+          elapsed += dt;
+        }
+      }
+    }
+
+    puppeteer.addAnimation(genCloudAnimation(0, -80, 0.07, entities.clouds.left.obj))
+    puppeteer.addAnimation(genCloudAnimation(-  80, 0, 0.05, entities.clouds.right.obj))
+    puppeteer.addAnimation(genCloudAnimation(20, -40, 0.1, entities.clouds.top.obj))
+    puppeteer.addAnimation(genCloudAnimation(-20, 40, 0.08, entities.clouds.middle.obj))
+
 
     const gradientAnimation = (() => {
       return {
