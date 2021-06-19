@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { HighstreetIsland } from "../.";
 import Stats from "stats.js"
+import * as dat from 'dat.gui';
 
 // Display stats
 const stats = new Stats();
@@ -12,6 +13,9 @@ function animate() {
     requestAnimationFrame( animate );
 }
 requestAnimationFrame( animate );
+
+
+const gui = new dat.GUI();
 
 const App = () => {
   return (
@@ -23,6 +27,9 @@ const App = () => {
         height: "min(80vw, 100vh)"
       }} worldConfig={{
         gltfPath: "island.glb"
+
+
+
       }}/>
     </div>
   );

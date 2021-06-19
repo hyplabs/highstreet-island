@@ -1,15 +1,20 @@
 import {
   BoxBufferGeometry,
+  // BufferGeometry,
+  CatmullRomCurve3,
   Clock,
   Color,
   DirectionalLight,
   HemisphereLight,
+  // Line,
+  // LineBasicMaterial,
   Mesh,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
   Scene,
   sRGBEncoding,
+  Vector3,
   // Vector3,
   WebGLRenderer,
 } from 'three';
@@ -20,6 +25,7 @@ import { Puppeteer } from './Puppeteer';
 import { LogoGradientMaterial } from './shaders/logo';
 import { ProportionalController } from './physics/ProportionalController';
 import { easeInOutCubic } from './util/easingFunctions';
+import { throttleLog } from './util/throttleLog';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -162,14 +168,127 @@ export function CreateWorld(
 
     //extract rocket out of scene
 
-    rocket.parent = scene;
+    // rocket.parent = scene;
 
     rocket.rotation.set(0, 0, 0);
+    rocket.scale.setScalar(0.75);
+    rocket.position.set(20, 1, -17);
 
     const rocketX = new ProportionalController(50, 10, 0);
     const rocketY = new ProportionalController(50, 10, 0);
     const rocketZ = new ProportionalController(50, 10, 0);
 
+    setRocketDest(2.25, 1, -22);
+    function setRocketDest(x: number, y: number, z: number) {
+      rocketX.setDesired(x);
+      rocketY.setDesired(y);
+      rocketZ.setDesired(z);
+    }
+
+    interface PathSegment {
+      startTime: number;
+      update: (progress: number) => void;
+    }
+
+    // function linterp(from: number, to: number, progress: number) {
+    //   return (1 - progress) * from + to * progress;
+    // }
+
+    const points = [
+      new Vector3(20, 1, -17),
+      new Vector3(18, 20, -10),
+      new Vector3(-20, 25, 15),
+      new Vector3(0, 80, 20),
+      new Vector3(-80, 55, -40),
+      // new Vector3( 10, 0, 10 )
+    ];
+
+    const curve = new CatmullRomCurve3(points);
+    // const geometry = new BufferGeometry().setFromPoints(curve.getPoints(50));
+
+    // const material = new LineBasicMaterial({ color: 0xff0000 });
+
+    // Create the final object to add to the scene
+    // const curveObject = new Line(geometry, material);
+    // island.add(curveObject);
+    // island.add(rocket);
+
+    const segments: PathSegment[] = [
+      {
+        //idle
+        startTime: 0,
+        update: () => {
+          rocket.position.set(points[0].x, points[0].y, points[0].z);
+          rocket.rotation.set(0, 0, 0);
+        },
+      },
+      {
+        //launch
+        startTime: 1,
+        update: progress => {
+          curve.getPointAt(progress, rocket.position);
+          const tan = curve.getTangentAt(progress);
+          rocket.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), tan);
+          // // const y = linterp(1, 50, progress * progress);
+          // // const z = linterp(-22, -10, progress * progress);
+          // // const x = linterp(2.25, -40, progress * progress);
+          // // throttleLog(z);
+          //
+          // rocketY.setDesired(vec.x);
+          // rocketZ.setDesired(vec.y);
+          // rocketX.setDesired(vec.z);
+        },
+      },
+      {
+        //stop
+        startTime: 4,
+        update: () => {},
+      },
+      {
+        //stop
+        startTime: 7,
+        update: progress => {
+          rocket.position.set(points[0].x, points[0].y, points[0].z);
+          rocket.rotation.set(0, 0, 0);
+          rocket.scale.setScalar(progress * 0.75);
+        },
+      },
+      {
+        //stop
+        startTime: 9,
+        update: () => {},
+      },
+    ];
+
+    function getActiveSegment(tCycle: number) {
+      for (let i = 0; i < segments.length; i++) {
+        if (tCycle < segments[i].startTime) {
+          return i - 1;
+        }
+      }
+      throw new Error('SHOULD NEVER REACH HERE');
+    }
+
+    let lastSegment = -1;
+    function animateRocket(t: number) {
+      const tCycle = t % segments[segments.length - 1].startTime;
+
+      throttleLog(tCycle);
+
+      const activeSegmentIndex = getActiveSegment(tCycle);
+      const activeSegment = segments[activeSegmentIndex];
+      const endTime = segments[activeSegmentIndex + 1].startTime;
+      const cycleProgress =
+        (tCycle - activeSegment.startTime) /
+        (endTime - activeSegment.startTime);
+      activeSegment.update(cycleProgress);
+      // throttleLog(cycleProgress);
+
+      if (lastSegment !== activeSegment.startTime) {
+        console.log(activeSegment.startTime);
+        lastSegment = activeSegment.startTime;
+      }
+    }
     // const cacheProjectVec = new Vector3();
     // parent.addEventListener('click', e => {
     //   //
@@ -187,16 +306,22 @@ export function CreateWorld(
 
     const rocketAnimation = (() => {
       // rocking island animation
+
+      let elapsedTime = 0;
       return {
         update: (dt: number) => {
-          rocketX.step(dt);
-          rocketY.step(dt);
-          rocketZ.step(dt);
-          rocket.position.set(
-            rocketX.getCurrent(),
-            rocketY.getCurrent(),
-            rocketZ.getCurrent()
-          );
+          animateRocket(elapsedTime);
+
+          // rocketX.step(dt);
+          // rocketY.step(dt);
+          // rocketZ.step(dt);
+          // rocket.position.set(
+          //   rocketX.getCurrent(),
+          //   rocketY.getCurrent(),
+          //   rocketZ.getCurrent()
+          // );
+
+          elapsedTime += dt;
 
           // const distanceToRocket = rocket.position.distanceTo(new Vector3(rocketX._desired, rocketY._desired, rocketZ._desired));
           //
