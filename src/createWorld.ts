@@ -12,6 +12,7 @@ import {
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
+  Quaternion,
   Scene,
   sRGBEncoding,
   Vector3,
@@ -194,12 +195,29 @@ export function CreateWorld(
     //   return (1 - progress) * from + to * progress;
     // }
 
+    const moon = entities.moon.obj;
+
+    moon.position.x = -80;
+    moon.position.z -= 10;
+    moon.position.y += 10;
+
+    moon.scale.setScalar(1.5);
+
+
     const points = [
       new Vector3(20, 1, -17),
       new Vector3(18, 20, -10),
       new Vector3(-20, 25, 15),
       new Vector3(0, 80, 20),
-      new Vector3(-80, 55, -40),
+      new Vector3(-80, 66, -13),
+      new Vector3(-80, 45, -25),
+      // new Vector3(-80, 25, -30),
+      // new Vector3(-80, 25, -51),
+      // new Vector3(-80, 64, -30),
+      // new Vector3(-80, 66, -13),
+
+      // new Vector3(-80, 55, -40),
+
       // new Vector3( 10, 0, 10 )
     ];
 
@@ -240,24 +258,48 @@ export function CreateWorld(
         },
       },
       {
+
+        startTime: 3,
+        update: (() => {
+          // const initialQuaternion = new Quaternion().copy(rocket.quaternion)
+          return (progress: number) => {
+            // moon.position.x = rocket.position.x;
+
+            const moonToRocket = moon.position.clone().sub(rocket.position).normalize();
+            // moonToRocket.x = 0; //zero out depth difference
+            const tangentDir = moonToRocket.cross(new Vector3(1, 0, 0));
+            // const tangentDirQuat = new Quaternion().setFromUnitVectors
+            const quatToAlign = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), tangentDir);
+            // rocket.quaternion.copy(quatToAlign);
+
+
+
+
+            rocket.quaternion.slerp(quatToAlign, 0.1);
+
+
+          }
+        })()
+      },
+      {
         //stop
         startTime: 4,
         update: () => {},
       },
-      {
-        //stop
-        startTime: 7,
-        update: progress => {
-          rocket.position.set(points[0].x, points[0].y, points[0].z);
-          rocket.rotation.set(0, 0, 0);
-          rocket.scale.setScalar(progress * 0.75);
-        },
-      },
-      {
-        //stop
-        startTime: 9,
-        update: () => {},
-      },
+      // {
+      //   //stop
+      //   startTime: 7,
+      //   update: progress => {
+      //     rocket.position.set(points[0].x, points[0].y, points[0].z);
+      //     rocket.rotation.set(0, 0, 0);
+      //     rocket.scale.setScalar(progress * 0.75);
+      //   },
+      // },
+      // {
+      //   //stop
+      //   startTime: 9,
+      //   update: () => {},
+      // },
     ];
 
     function getActiveSegment(tCycle: number) {

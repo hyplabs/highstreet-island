@@ -75,5 +75,8 @@ export function entityExtractors(root: Object3D) {
         obj: getObjectByName(gift, 'Gift_D'),
       },
     },
+    moon: {
+      obj: getObjectByName(root, 'Moon002')
+    }
   };
 }
