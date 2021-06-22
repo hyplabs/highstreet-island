@@ -260,7 +260,7 @@ export function CreateWorld(
         startTime: 3,
         update: (() => {
           let initialX = 0;
-          let initialRotation = null;
+          let initialRotation: Quaternion | null = null;
 
           return (progress: number, isStart: boolean) => {
             if (isStart) {
