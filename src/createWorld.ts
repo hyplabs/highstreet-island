@@ -166,25 +166,13 @@ export function CreateWorld(
     puppeteer.addAnimation(gradientAnimation);
 
     const rocket = entities.rocket.obj;
-
-    //extract rocket out of scene
-
-    // rocket.parent = scene;
-
-    rocket.rotation.set(0, 0, 0);
-    rocket.scale.setScalar(0.75);
-    rocket.position.set(20, 1, -17);
-
-    const rocketX = new ProportionalController(50, 10, 0);
-    const rocketY = new ProportionalController(50, 10, 0);
-    const rocketZ = new ProportionalController(50, 10, 0);
-
-    setRocketDest(2.25, 1, -22);
-    function setRocketDest(x: number, y: number, z: number) {
-      rocketX.setDesired(x);
-      rocketY.setDesired(y);
-      rocketZ.setDesired(z);
+    function initRocket() {
+      rocket.rotation.set(0, 0, 0);
+      rocket.scale.setScalar(0.75);
+      rocket.position.set(20, 1, -17);
     }
+
+    initRocket();
 
     interface PathSegment {
       startTime: number;
@@ -210,14 +198,6 @@ export function CreateWorld(
       new Vector3(0, 80, 20),
       new Vector3(-60, 66, -13),
       new Vector3(-80, 45, -25),
-      // new Vector3(-80, 25, -30),
-      // new Vector3(-80, 25, -51),
-      // new Vector3(-80, 64, -30),
-      // new Vector3(-80, 66, -13),
-
-      // new Vector3(-80, 55, -40),
-
-      // new Vector3( 10, 0, 10 )
     ];
 
     const curve = new CatmullRomCurve3(points);
@@ -260,12 +240,12 @@ export function CreateWorld(
         startTime: 3,
         update: (() => {
           let initialX = 0;
-          let initialRotation: Quaternion | null = null;
+          let initialRotation = new Quaternion();
 
           return (progress: number, isStart: boolean) => {
             if (isStart) {
               initialX = rocket.position.x;
-              initialRotation = rocket.quaternion;
+              initialRotation.copy(rocket.quaternion);
             }
 
             // moon.position.x = rocket.position.x;
@@ -297,7 +277,7 @@ export function CreateWorld(
         })(),
       },
       {
-        startTime: 3.25,
+        startTime: 3.2,
         update: (() => {
           let initialAngle = 0;
           let radius = 0;
@@ -307,10 +287,8 @@ export function CreateWorld(
             if (isStart) {
               const D = rocket.position.clone().sub(moon.position);
               radius = D.length();
-              console.log('MOON TO ROCKET', D, 'RADIUS', radius);
               initialAngle = Math.atan2(D.y, D.z);
               totalAngularDistance = -5 * Math.PI + initialAngle;
-              console.log('ANGLE', initialAngle);
             }
 
             const angle = progress * totalAngularDistance + initialAngle;
@@ -332,28 +310,39 @@ export function CreateWorld(
         //stop
         startTime: 6,
         update: (() => {
-          let initialRocketPosition = new Vector3();
-          return (progress, isStart) => {
-            initialRocketPosition.copy(rocket.position);
+          const initialRocketPosition = new Vector3();
+          const initialRocketRotation = new Quaternion();
+          return (progress: number, isStart: boolean) => {
+            if (isStart) {
+              initialRocketPosition.copy(rocket.position);
+              initialRocketRotation.copy(rocket.quaternion);
+            }
+
             const moonToRocket = moon.position
               .clone()
               .sub(rocket.position)
               .normalize();
-            // moonToRocket.x = 0; //zero out depth difference
-            // const tangentDir = moonToRocket.cross(new Vector3(1, 0, 0));
-            // const tangentDirQuat = new Quaternion().setFromUnitVectors
+
             const quatToAlign = new Quaternion().setFromUnitVectors(
               new Vector3(0, -1, 0),
               moonToRocket
             );
-            // rocket.quaternion.copy(quatToAlign);
-            rocket.quaternion.slerp(quatToAlign, 0.1);
+
+            const fastProgress = easeOutQuadratic(progress);
+
+            rocket.quaternion.copy(
+              initialRocketRotation
+                .clone()
+                .slerp(quatToAlign, Math.min(fastProgress * 2, 1))
+            );
+            // rocket.quaternion.slerp(quatToAlign, 0.1);
+
             rocket.position.copy(
               initialRocketPosition
                 .clone()
                 .add(
                   moonToRocket.multiplyScalar(
-                    easeOutQuadratic(progress) * 0.175
+                    easeOutQuadratic(fastProgress) * 10
                   )
                 )
             );
@@ -361,11 +350,15 @@ export function CreateWorld(
         })(),
       },
       {
-        //stop
         startTime: 7.5,
+        update: () => {},
+      },
+      {
+        //stop
+        startTime: 8.5,
         update: (() => {
           let initialRocketPosition = new Vector3();
-          return (progress, isStart) => {
+          return (progress: number, isStart: boolean) => {
             if (isStart) {
               initialRocketPosition.copy(rocket.position);
             }
@@ -383,22 +376,22 @@ export function CreateWorld(
       },
       {
         //stop
-        startTime: 8,
-        update: () => {},
+        startTime: 9,
+        update: progress => {
+          rocket.position.set(points[0].x, points[0].y, points[0].z);
+          rocket.rotation.set(0, 0, 0);
+          rocket.scale.setScalar(progress * 0.75);
+        },
       },
       {
         //stop
-        startTime: 8.5,
+        startTime: 9.5,
         update: () => {},
       },
       // {
       //   //stop
       //   startTime: 7,
-      //   update: progress => {
-      //     rocket.position.set(points[0].x, points[0].y, points[0].z);
-      //     rocket.rotation.set(0, 0, 0);
-      //     rocket.scale.setScalar(progress * 0.75);
-      //   },
+
       // },
       // {
       //   //stop
@@ -453,48 +446,21 @@ export function CreateWorld(
       let elapsedTime = 0;
       return {
         update: (dt: number) => {
+          if (dt > 0.5) {
+            // this is a large timestamp, might screw things up, reset rocket
+            console.log(`TIME STEP TOO LARGE ${dt}, reseting loop`);
+            elapsedTime = 0;
+            initRocket();
+          }
           animateRocket(elapsedTime);
-
-          // rocketX.step(dt);
-          // rocketY.step(dt);
-          // rocketZ.step(dt);
-          // rocket.position.set(
-          //   rocketX.getCurrent(),
-          //   rocketY.getCurrent(),
-          //   rocketZ.getCurrent()
-          // );
-
           elapsedTime += dt;
-
-          // const distanceToRocket = rocket.position.distanceTo(new Vector3(rocketX._desired, rocketY._desired, rocketZ._desired));
-          //
-          // if(Math.round(elapsed * 2) % 2 === 0){
-          //   // console.log(distanceToRocket);
-          // }
-
-          // if(distanceToRocket > 30){
-          //   // align.setDesired(1);
-          //   const currentRocketQuaternion = rocket.quaternion.copy(rocketQuatCache);
-          //   rocket.lookAt(rocketX._desired, rocketY._desired, rocketZ._desired);
-
-          // const logit = 1/(1 + Math.pow(2, -(distanceToRocket- 1000)));
-
-          // if(logit < 0.3) return;
-          // rocket.quaternion.slerp(currentRocketQuaternion, 1 - logit);
-
-          //
-          // if(logit < 0.9){
-          //   }
-
-          // }
-          // else if(distanceToRocket < 5){
-          //   align.setDesired(0);
-          // }
         },
       };
     })();
 
-    puppeteer.addAnimation(rocketAnimation);
+    setTimeout(() => {
+      puppeteer.addAnimation(rocketAnimation);
+    }, 500);
 
     //gift
 
@@ -536,9 +502,6 @@ export function CreateWorld(
     puppeteer.addAnimation(giftAnimation);
 
     //gradually fade in island
-
-    rocket.visible = false;
-
     const fadeIn = (() => {
       const fadeInTime = 1.3;
       let elapsed = 0;
@@ -556,7 +519,6 @@ export function CreateWorld(
           if (progress === 1) {
             //done
             puppeteer.removeAnimation(fadeIn);
-            rocket.visible = true;
           }
 
           elapsed += dt;
@@ -580,8 +542,6 @@ export function CreateWorld(
 
   renderer.outputEncoding = sRGBEncoding;
   renderer.gammaFactor = 2.2;
-
-  // scene.background = new Color(0xe4cece); // pink
 
   // Hemisphere light for subtle gradient
   scene.add(
