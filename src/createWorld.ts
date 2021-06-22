@@ -25,7 +25,7 @@ import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
 import { LogoGradientMaterial } from './shaders/logo';
 import { ProportionalController } from './physics/ProportionalController';
-import { easeInOutCubic } from './util/easingFunctions';
+import { easeInOutCubic, easeOutQuadratic } from './util/easingFunctions';
 import { throttleLog } from './util/throttleLog';
 
 export type WorldConfig = {
@@ -191,9 +191,9 @@ export function CreateWorld(
       update: (progress: number, isStart: boolean) => void;
     }
 
-    // function linterp(from: number, to: number, progress: number) {
-    //   return (1 - progress) * from + to * progress;
-    // }
+    function linterp(from: number, to: number, progress: number) {
+      return (1 - progress) * from + to * progress;
+    }
 
     const moon = entities.moon.obj;
 
@@ -260,8 +260,17 @@ export function CreateWorld(
       {
         startTime: 3,
         update: (() => {
-          // const initialQuaternion = new Quaternion().copy(rocket.quaternion)
+
+          let initialX = 0;
+          let initialRotation = null;
+
           return (progress: number, isStart: boolean) => {
+            if(isStart){
+              initialX = rocket.position.x;
+              initialRotation = rocket.quaternion;
+            }
+
+
             // moon.position.x = rocket.position.x;
             const moonToRocket = moon.position.clone().sub(rocket.position).normalize();
             // moonToRocket.x = 0; //zero out depth difference
@@ -270,8 +279,13 @@ export function CreateWorld(
             const quatToAlign = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), tangentDir);
             // rocket.quaternion.copy(quatToAlign);
 
-            rocket.position.x = 0.1 * (-80) + ( 1- 0.1) * rocket.position.x;
-            rocket.quaternion.slerp(quatToAlign, 0.1);
+            rocket.position.x = linterp(initialX, -80, progress);
+            rocket.quaternion.copy(initialRotation.clone().slerp(quatToAlign, progress))
+
+
+            //
+            // rocket.position.x = 0.1 * (-80) + ( 1- 0.1) * rocket.position.x;
+            // rocket.quaternion.slerp(quatToAlign, 0.1);
             // const forward = new Vector3(0, 1, 0).applyQuaternion(rocket.quaternion);
             // rocket.position.add(forward.setScalar(-0.5));
             // // rocket.position.add(rocket.axi)
@@ -320,7 +334,23 @@ export function CreateWorld(
             const quatToAlign = new Quaternion().setFromUnitVectors(new Vector3(0, -1, 0), moonToRocket);
             // rocket.quaternion.copy(quatToAlign);
             rocket.quaternion.slerp(quatToAlign, 0.1);
-            rocket.position.copy(initialRocketPosition.clone().add(moonToRocket.multiplyScalar(progress * 0.175)))
+            rocket.position.copy(initialRocketPosition.clone().add(moonToRocket.multiplyScalar(easeOutQuadratic(progress) * 0.175)))
+          }
+        })(),
+      },
+      {
+        //stop
+        startTime: 7.5,
+        update: (() => {
+          let initialRocketPosition = new Vector3();
+          return (progress, isStart) => {
+            if(isStart){
+              initialRocketPosition.copy(rocket.position);
+            }
+
+            const forward = new Vector3(0, 1, 0).applyQuaternion(rocket.quaternion);
+            rocket.position.copy(initialRocketPosition.clone().add(forward.multiplyScalar(easeOutQuadratic(progress) * 50)))
+
           }
         })(),
       },
@@ -331,7 +361,7 @@ export function CreateWorld(
       },
       {
         //stop
-        startTime: 10,
+        startTime: 8.5,
         update: () => {},
       },
       // {
