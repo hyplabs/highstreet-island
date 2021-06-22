@@ -188,7 +188,7 @@ export function CreateWorld(
 
     interface PathSegment {
       startTime: number;
-      update: (progress: number) => void;
+      update: (progress: number, isStart: boolean) => void;
     }
 
     // function linterp(from: number, to: number, progress: number) {
@@ -209,7 +209,7 @@ export function CreateWorld(
       new Vector3(18, 20, -10),
       new Vector3(-20, 25, 15),
       new Vector3(0, 80, 20),
-      new Vector3(-80, 66, -13),
+      new Vector3(-60, 66, -13),
       new Vector3(-80, 45, -25),
       // new Vector3(-80, 25, -30),
       // new Vector3(-80, 25, -51),
@@ -258,13 +258,11 @@ export function CreateWorld(
         },
       },
       {
-
         startTime: 3,
         update: (() => {
           // const initialQuaternion = new Quaternion().copy(rocket.quaternion)
-          return (progress: number) => {
+          return (progress: number, isStart: boolean) => {
             // moon.position.x = rocket.position.x;
-
             const moonToRocket = moon.position.clone().sub(rocket.position).normalize();
             // moonToRocket.x = 0; //zero out depth difference
             const tangentDir = moonToRocket.cross(new Vector3(1, 0, 0));
@@ -272,18 +270,68 @@ export function CreateWorld(
             const quatToAlign = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), tangentDir);
             // rocket.quaternion.copy(quatToAlign);
 
-
-
-
+            rocket.position.x = 0.1 * (-80) + ( 1- 0.1) * rocket.position.x;
             rocket.quaternion.slerp(quatToAlign, 0.1);
+            // const forward = new Vector3(0, 1, 0).applyQuaternion(rocket.quaternion);
+            // rocket.position.add(forward.setScalar(-0.5));
+            // // rocket.position.add(rocket.axi)
+          }
+        })()
+      },
+      {
+        startTime: 3.25,
+        update: (() => {
+          let initialAngle = 0;
+          let radius = 0;
+          let totalAngularDistance = 0;
 
+          return (progress: number, isStart: boolean) => {
+            if(isStart){
+              const D = rocket.position.clone().sub(moon.position);
+              radius = D.length();
+              console.log("MOON TO ROCKET", D, "RADIUS", radius);
+              initialAngle = Math.atan2(D.y, D.z);
+              totalAngularDistance = - 5 * Math.PI + initialAngle;
+              console.log("ANGLE", initialAngle);
 
+            }
+
+            const angle = progress * totalAngularDistance + initialAngle;
+            const dx = Math.cos(angle);
+            const dy = Math.sin(angle);
+            rocket.position.y = moon.position.y + dy * radius;
+            rocket.position.z = moon.position.z + dx * radius;
+            const tangentDir = new Vector3(0, dy, dx).cross(new Vector3(-1, 0, 0));
+            rocket.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), tangentDir);
           }
         })()
       },
       {
         //stop
-        startTime: 4,
+        startTime: 6,
+        update: (() => {
+          let initialRocketPosition = new Vector3();
+          return (progress, isStart) => {
+            initialRocketPosition.copy(rocket.position);
+            const moonToRocket = moon.position.clone().sub(rocket.position).normalize();
+            // moonToRocket.x = 0; //zero out depth difference
+            // const tangentDir = moonToRocket.cross(new Vector3(1, 0, 0));
+            // const tangentDirQuat = new Quaternion().setFromUnitVectors
+            const quatToAlign = new Quaternion().setFromUnitVectors(new Vector3(0, -1, 0), moonToRocket);
+            // rocket.quaternion.copy(quatToAlign);
+            rocket.quaternion.slerp(quatToAlign, 0.1);
+            rocket.position.copy(initialRocketPosition.clone().add(moonToRocket.multiplyScalar(progress * 0.175)))
+          }
+        })(),
+      },
+      {
+        //stop
+        startTime: 8,
+        update: () => {},
+      },
+      {
+        //stop
+        startTime: 10,
         update: () => {},
       },
       // {
@@ -311,25 +359,21 @@ export function CreateWorld(
       throw new Error('SHOULD NEVER REACH HERE');
     }
 
-    let lastSegment = -1;
+    let lastSegment: PathSegment | null = null;
     function animateRocket(t: number) {
       const tCycle = t % segments[segments.length - 1].startTime;
-
-      throttleLog(tCycle);
-
       const activeSegmentIndex = getActiveSegment(tCycle);
       const activeSegment = segments[activeSegmentIndex];
       const endTime = segments[activeSegmentIndex + 1].startTime;
       const cycleProgress =
         (tCycle - activeSegment.startTime) /
         (endTime - activeSegment.startTime);
-      activeSegment.update(cycleProgress);
-      // throttleLog(cycleProgress);
 
-      if (lastSegment !== activeSegment.startTime) {
-        console.log(activeSegment.startTime);
-        lastSegment = activeSegment.startTime;
+      activeSegment.update(cycleProgress, lastSegment !== activeSegment);
+      if(lastSegment !== activeSegment){
+        lastSegment = activeSegment;
       }
+      // throttleLog(cycleProgress);
     }
     // const cacheProjectVec = new Vector3();
     // parent.addEventListener('click', e => {
