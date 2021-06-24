@@ -288,7 +288,7 @@ export function CreateWorld(
               const D = rocket.position.clone().sub(moon.position);
               radius = D.length();
               initialAngle = Math.atan2(D.y, D.z);
-              totalAngularDistance = -5 * Math.PI + initialAngle;
+              totalAngularDistance = -3 * Math.PI + initialAngle;
             }
 
             const angle = progress * totalAngularDistance + initialAngle;
@@ -308,7 +308,7 @@ export function CreateWorld(
       },
       {
         //stop
-        startTime: 6,
+        startTime: 4.5,
         update: (() => {
           const initialRocketPosition = new Vector3();
           const initialRocketRotation = new Quaternion();
@@ -350,12 +350,12 @@ export function CreateWorld(
         })(),
       },
       {
-        startTime: 7.5,
+        startTime: 6,
         update: () => {},
       },
       {
         //stop
-        startTime: 8.5,
+        startTime: 7,
         update: (() => {
           let initialRocketPosition = new Vector3();
           return (progress: number, isStart: boolean) => {
@@ -376,7 +376,7 @@ export function CreateWorld(
       },
       {
         //stop
-        startTime: 9,
+        startTime: 7.5,
         update: progress => {
           rocket.position.set(points[0].x, points[0].y, points[0].z);
           rocket.rotation.set(0, 0, 0);
@@ -385,7 +385,7 @@ export function CreateWorld(
       },
       {
         //stop
-        startTime: 9.5,
+        startTime: 8,
         update: () => {},
       },
       // {
