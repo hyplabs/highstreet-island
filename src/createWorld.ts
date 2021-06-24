@@ -438,18 +438,11 @@ export function CreateWorld(
 
     const rocketAnimation = (() => {
       // rocking island animation
-
       let elapsedTime = 0;
       return {
         update: (dt: number) => {
-          if (dt > 0.1) {
-            // this is a large timestamp, might screw things up, reset rocket
-            console.log(`TIME STEP TOO LARGE ${dt}, reseting loop`);
-            elapsedTime = 0;
-            initRocket();
-          }
           animateRocket(elapsedTime);
-          elapsedTime += dt;
+          elapsedTime += Math.min(dt, 0.033); //throttle dt
         },
       };
     })();
