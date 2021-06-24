@@ -104,8 +104,8 @@ export function CreateWorld(
     const entities = entityExtractors(island);
 
     // use custom shader for logo
-    const logo = entities.land.high.obj;
-    logo.material = LogoGradientMaterial;
+    entities.land.high.obj.material = LogoGradientMaterial;
+    entities.land.duckBlock.obj.material = LogoGradientMaterial;
 
     const genCloudAnimation = (
       dz_min: number,

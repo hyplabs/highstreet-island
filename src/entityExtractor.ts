@@ -34,12 +34,15 @@ function getObjectByName(root: Object3D, name: string) {
 export function entityExtractors(root: Object3D) {
   const land = getObjectByName(root, 'Land');
   const clouds = getObjectByName(root, 'Clouds');
-  let gift = getObjectByName(root, 'Floating_Gift');
+  const gift = getObjectByName(root, 'Floating_Gift');
   return {
     land: {
       obj: land,
       high: {
-        obj: getObjectByName(land, 'G001') as Mesh,
+        obj: getObjectByName(land, 'HighLogo') as Mesh,
+      },
+      duckBlock: {
+        obj: getObjectByName(land, 'HighLogoDuckBlock') as Mesh,
       },
     },
     clouds: {
