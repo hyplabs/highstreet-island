@@ -446,7 +446,7 @@ export function CreateWorld(
       let elapsedTime = 0;
       return {
         update: (dt: number) => {
-          if (dt > 0.5) {
+          if (dt > 0.1) {
             // this is a large timestamp, might screw things up, reset rocket
             console.log(`TIME STEP TOO LARGE ${dt}, reseting loop`);
             elapsedTime = 0;
