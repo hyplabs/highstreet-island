@@ -13,8 +13,10 @@ import {
   Object3D,
   PerspectiveCamera,
   Quaternion,
+  Raycaster,
   Scene,
   sRGBEncoding,
+  Vector2,
   Vector3,
   // Vector3,
   WebGLRenderer,
@@ -38,7 +40,8 @@ export function CreateWorld(
   config: WorldConfig
 ) {
   const camera = new PerspectiveCamera();
-  camera.rotateY(degToRad(-90));
+  camera.rotateY(degToRad(-90)); //rotate camera to face island
+
   //AXIS FOR OUR WORLD
 
   // X -> Inward toward island
@@ -50,9 +53,6 @@ export function CreateWorld(
     const h = parent.clientHeight;
 
     if (w === canvas.width && h === canvas.height) return;
-
-    console.log('SETTING CANVAS SIZE:', w, h);
-    //have renderer take full size of parent
     renderer.setSize(w, h);
 
     camera.aspect = w / h;
@@ -64,13 +64,6 @@ export function CreateWorld(
   //@ts-ignore for some reason ts complains ResizeObserver not found
   const resizeObserver = new ResizeObserver(onResize);
   resizeObserver.observe(parent);
-
-  // camera.updateProjectionMatrix();
-
-  // setInterval(() => {
-  //   const projected = new Vector3(0, 0, 0.5).unproject(camera)
-  //   console.log(projected.clone());
-  // }, 1000);
 
   const scene = new Scene();
 
@@ -201,14 +194,11 @@ export function CreateWorld(
     ];
 
     const curve = new CatmullRomCurve3(points);
+    // FOR VISUALIZING CURVE
     // const geometry = new BufferGeometry().setFromPoints(curve.getPoints(50));
-
     // const material = new LineBasicMaterial({ color: 0xff0000 });
-
-    // Create the final object to add to the scene
     // const curveObject = new Line(geometry, material);
     // island.add(curveObject);
-    // island.add(rocket);
 
     const segments: PathSegment[] = [
       {
@@ -226,14 +216,6 @@ export function CreateWorld(
           curve.getPointAt(progress, rocket.position);
           const tan = curve.getTangentAt(progress);
           rocket.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), tan);
-          // // const y = linterp(1, 50, progress * progress);
-          // // const z = linterp(-22, -10, progress * progress);
-          // // const x = linterp(2.25, -40, progress * progress);
-          // // throttleLog(z);
-          //
-          // rocketY.setDesired(vec.x);
-          // rocketZ.setDesired(vec.y);
-          // rocketX.setDesired(vec.z);
         },
       },
       {
@@ -425,20 +407,34 @@ export function CreateWorld(
       }
       // throttleLog(cycleProgress);
     }
-    // const cacheProjectVec = new Vector3();
-    // parent.addEventListener('click', e => {
-    //   //
-    //   const screenX = (e.pageX - parent.offsetLeft) / parent.clientWidth;
-    //   const screenY = (e.pageY - parent.clientTop) / parent.clientHeight;
-    //   //
-    //   const ndc_x = screenX * 2 - 1;
-    //   const ndc_y = -(screenY * 2 - 1);
-    //
-    //   cacheProjectVec.set(ndc_x, ndc_y, 0.999).unproject(camera);
-    //   rocketX.setDesired(cacheProjectVec.x);
-    //   rocketY.setDesired(cacheProjectVec.y);
-    //   rocketZ.setDesired(cacheProjectVec.z);
-    // });
+
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
+
+    raycaster.layers.enableAll();
+
+    //set clickable objects
+    raycaster.layers.disableAll();
+    raycaster.layers.enable(1);
+    entities.land.duckBlock.obj.layers.enable(1);
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const dx = e.clientX - rect.left;
+      const dy = e.clientY - rect.top;
+
+      const screenX = dx / rect.width;
+      const screenY = dy / rect.height;
+
+      mouse.x = screenX * 2 - 1;
+      mouse.y = -(screenY * 2 - 1);
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObjects(scene.children, true);
+      if (intersects[0]?.object === entities.land.duckBlock.obj) {
+        console.log('CLICKED DUCK');
+      }
+    });
 
     const rocketAnimation = (() => {
       // rocking island animation
