@@ -38,6 +38,7 @@ export function CreateWorld(
   config: WorldConfig
 ) {
   const camera = new PerspectiveCamera();
+  camera.rotateY(degToRad(-90));
   //AXIS FOR OUR WORLD
 
   // X -> Inward toward island
@@ -57,13 +58,12 @@ export function CreateWorld(
     camera.aspect = w / h;
     camera.fov = 70;
     camera.position.set(-80, 25, 0);
-    camera.rotateY(degToRad(-90));
     camera.updateProjectionMatrix();
   };
 
   //@ts-ignore for some reason ts complains ResizeObserver not found
   const resizeObserver = new ResizeObserver(onResize);
-  resizeObserver.observe(canvas);
+  resizeObserver.observe(parent);
 
   // camera.updateProjectionMatrix();
 
