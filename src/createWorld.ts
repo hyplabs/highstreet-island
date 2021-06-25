@@ -6,6 +6,7 @@ import {
   Color,
   DirectionalLight,
   HemisphereLight,
+  Material,
   // Line,
   // LineBasicMaterial,
   Mesh,
@@ -393,9 +394,29 @@ export function CreateWorld(
 
     // duck mario
     let duckClicked = false;
-    // reparent duck to be child of block
     const duck = entities.land.duck.obj;
+
+    const emblem = entities.land.duckBlock.emblem.obj;
+
+    const emblemMat = (emblem.material as MeshStandardMaterial).clone();
+    
+    // emblemMat.metalness = 0.8;
+
+    emblem.material = emblemMat;
+    emblemMat.transparent = true;
     duck.position.x -= 1;
+
+    // duck emblem
+    const emblemAnimation = (() => {
+      // rocking island animation
+      return {
+        update: (_: number, elapsedTime: number) => {
+          emblemMat.opacity = 0.3 + 0.2 * Math.abs(Math.sin(elapsedTime * 3));
+        },
+      };
+    })();
+    puppeteer.addAnimation(emblemAnimation);
+
 
     const duckYbias = duck.position.y;
     const duckBlockYbias = duckBlock.position.y;
@@ -412,9 +433,13 @@ export function CreateWorld(
       {
         //duck appears
         startTime: 0.5,
-        update: progress => {
+        update: (progress, isStart) => {
+          if(isStart){
+            puppeteer.removeAnimation(emblemAnimation);
+          }
           duck.visible = true;
           duck.position.y = duckYbias + progress * 2.5;
+          emblemMat.opacity = 0.3 * ( 1 - progress);
         },
       },
       {

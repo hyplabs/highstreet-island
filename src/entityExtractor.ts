@@ -21,6 +21,9 @@ export function entityExtractors(root: Object3D) {
       },
       duckBlock: {
         obj: getObjectByName(land, 'HighLogoDuckBlock') as Mesh,
+        emblem: {
+          obj: getObjectByName(land, 'HighLogoDuckBlock').getObjectByName('Emblem') as Mesh,
+        }
       },
       duck: {
         obj: getObjectByName(land, 'Duck_Icon') as Mesh,
