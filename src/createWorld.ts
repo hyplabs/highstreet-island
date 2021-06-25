@@ -420,12 +420,12 @@ export function CreateWorld(
       {
         //wait
         startTime: 2,
-        update: progress => {},
+        update: _ => {},
       },
       {
         //stop
         startTime: 3,
-        update: progress => {},
+        update: _ => {},
       },
     ];
     const duckAnimationDuration =
