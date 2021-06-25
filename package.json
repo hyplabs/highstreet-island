@@ -33,7 +33,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "highstreet-island",
+  "name": "@hyplabs/highstreet-island",
   "author": "Larry",
   "module": "dist/highstreet-island.esm.js",
   "size-limit": [
