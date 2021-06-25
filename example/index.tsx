@@ -1,21 +1,19 @@
-import 'react-app-polyfill/ie11';
+// import 'react-app-polyfill/ie11';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { HighstreetIsland } from "../.";
-import Stats from "stats.js"
-import * as dat from 'dat.gui';
+// import Stats from "stats.js"
+// import * as dat from 'dat.gui';
 
 // Display stats
-const stats = new Stats();
-document.body.appendChild( stats.dom );
-function animate() {
-    stats.update();
-    requestAnimationFrame( animate );
-}
-requestAnimationFrame( animate );
-
-
-const gui = new dat.GUI();
+// const stats = new Stats();
+// document.body.appendChild( stats.dom );
+// function animate() {
+//     stats.update();
+//     requestAnimationFrame( animate );
+// }
+// requestAnimationFrame( animate );
+// const gui = new dat.GUI();
 
 const App = () => {
   return (
@@ -27,9 +25,6 @@ const App = () => {
         height: "min(80vw, 100vh)"
       }} worldConfig={{
         gltfPath: "island.glb"
-
-
-
       }}/>
     </div>
   );

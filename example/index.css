@@ -4,7 +4,8 @@ html, body{
 }
 
 #root{
-    background: linear-gradient(0deg, #edbafd 0%, #8c69f9 100%);
+    /* background: linear-gradient(0deg, #edbafd 0%, #8c69f9 100%); */
+    background: transparent;
 }
 
 .container{
