@@ -1,27 +1,5 @@
 import { Mesh, Object3D } from 'three';
 
-// enum MeshNodes {
-//     ISLAND = "ISLAND",
-//     LAND = "LAND"
-// }
-//
-// interface MeshPath {
-//     name: MeshNodes
-//     children: MeshPath[]
-// }
-//
-// interface ResolvedMeshes {
-//     name: MeshNodes
-//     children: Map<MeshNodes, Object3D>
-// }
-//
-// const ISLAND_ROOT_MESH_PATH = {
-//     name: MeshNodes.ISLAND,
-//     children: [
-//
-//     ]
-// }
-
 function getObjectByName(root: Object3D, name: string) {
   const obj = root.getObjectByName(name);
   if (!obj) {
@@ -43,6 +21,9 @@ export function entityExtractors(root: Object3D) {
       },
       duckBlock: {
         obj: getObjectByName(land, 'HighLogoDuckBlock') as Mesh,
+      },
+      duck: {
+        obj: getObjectByName(land, 'Duck_Icon') as Mesh,
       },
     },
     clouds: {

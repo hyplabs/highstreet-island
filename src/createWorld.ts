@@ -25,6 +25,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
+import { segmentedAnimation, PathSegment } from './segmentedAnimation';
 import { LogoGradientMaterial } from './shaders/logo';
 import { ProportionalController } from './physics/ProportionalController';
 import { easeInOutCubic, easeOutQuadratic } from './util/easingFunctions';
@@ -167,11 +168,6 @@ export function CreateWorld(
 
     initRocket();
 
-    interface PathSegment {
-      startTime: number;
-      update: (progress: number, isStart: boolean) => void;
-    }
-
     function linterp(from: number, to: number, progress: number) {
       return (1 - progress) * from + to * progress;
     }
@@ -200,7 +196,7 @@ export function CreateWorld(
     // const curveObject = new Line(geometry, material);
     // island.add(curveObject);
 
-    const segments: PathSegment[] = [
+    const rocketSegments: PathSegment[] = [
       {
         //idle
         startTime: 0,
@@ -382,32 +378,6 @@ export function CreateWorld(
       // },
     ];
 
-    function getActiveSegment(tCycle: number) {
-      for (let i = 0; i < segments.length; i++) {
-        if (tCycle < segments[i].startTime) {
-          return i - 1;
-        }
-      }
-      throw new Error('SHOULD NEVER REACH HERE');
-    }
-
-    let lastSegment: PathSegment | null = null;
-    function animateRocket(t: number) {
-      const tCycle = t % segments[segments.length - 1].startTime;
-      const activeSegmentIndex = getActiveSegment(tCycle);
-      const activeSegment = segments[activeSegmentIndex];
-      const endTime = segments[activeSegmentIndex + 1].startTime;
-      const cycleProgress =
-        (tCycle - activeSegment.startTime) /
-        (endTime - activeSegment.startTime);
-
-      activeSegment.update(cycleProgress, lastSegment !== activeSegment);
-      if (lastSegment !== activeSegment) {
-        lastSegment = activeSegment;
-      }
-      // throttleLog(cycleProgress);
-    }
-
     const raycaster = new Raycaster();
     const mouse = new Vector2();
 
@@ -416,7 +386,64 @@ export function CreateWorld(
     //set clickable objects
     raycaster.layers.disableAll();
     raycaster.layers.enable(1);
-    entities.land.duckBlock.obj.layers.enable(1);
+
+    const duckBlock = entities.land.duckBlock.obj;
+
+    duckBlock.layers.enable(1);
+
+    // duck mario
+    let duckClicked = false;
+    // reparent duck to be child of block
+    const duck = entities.land.duck.obj;
+    duck.position.x -= 1;
+
+    const duckYbias = duck.position.y;
+    const duckBlockYbias = duckBlock.position.y;
+    const duckSegments: PathSegment[] = [
+      {
+        //bouncy block
+        startTime: 0,
+        update: progress => {
+          duck.visible = false;
+          duckBlock.position.y =
+            duckBlockYbias + 1.5 * Math.sin(Math.PI * progress);
+        },
+      },
+      {
+        //duck appears
+        startTime: 0.5,
+        update: progress => {
+          duck.visible = true;
+          duck.position.y = duckYbias + progress * 2.5;
+        },
+      },
+      {
+        //wait
+        startTime: 2,
+        update: progress => {},
+      },
+      {
+        //stop
+        startTime: 3,
+        update: progress => {},
+      },
+    ];
+    const duckAnimationDuration =
+      duckSegments[duckSegments.length - 1].startTime;
+    const segmentedDuckAnimation = segmentedAnimation(duckSegments);
+    const duckAnimation = (() => {
+      let elaspsedTime = 0;
+      return {
+        update: (dt: number) => {
+          segmentedDuckAnimation(elaspsedTime);
+          elaspsedTime += dt;
+          if (elaspsedTime > duckAnimationDuration) {
+            //play animation once
+            puppeteer.removeAnimation(duckAnimation);
+          }
+        },
+      };
+    })();
 
     canvas.addEventListener('click', e => {
       const rect = canvas.getBoundingClientRect();
@@ -433,15 +460,21 @@ export function CreateWorld(
       const intersects = raycaster.intersectObjects(scene.children, true);
       if (intersects[0]?.object === entities.land.duckBlock.obj) {
         console.log('CLICKED DUCK');
+
+        if (duckClicked) return;
+        duckClicked = true;
+
+        puppeteer.addAnimation(duckAnimation);
       }
     });
 
+    const segmentedRocketAnimation = segmentedAnimation(rocketSegments);
     const rocketAnimation = (() => {
       // rocking island animation
       let elapsedTime = 0;
       return {
         update: (dt: number) => {
-          animateRocket(elapsedTime);
+          segmentedRocketAnimation(elapsedTime);
           elapsedTime += Math.min(dt, 0.033); //throttle dt
         },
       };
