@@ -91,15 +91,19 @@ export function CreateWorld(
     const gltf = await loader.loadAsync(config.gltfPath);
     scene.add(gltf.scene);
 
-    const island = gltf.scene.getObjectByName('Island_v2');
+    const island = gltf.scene.getObjectByName('Island_v3');
     if (!island) throw new Error('Mesh not found');
     island.rotateY(degToRad(180));
 
     const entities = entityExtractors(island);
 
     // use custom shader for logo
-    entities.land.high.obj.material = LogoGradientMaterial;
-    entities.land.duckBlock.obj.material = LogoGradientMaterial;
+    entities.land.high.h1.obj.material = LogoGradientMaterial;
+    entities.land.high.h2.obj.material = LogoGradientMaterial;
+    entities.land.high.i.obj.material = LogoGradientMaterial;
+    entities.land.high.i_block.obj.material = LogoGradientMaterial;
+    entities.land.high.g.obj.material = LogoGradientMaterial;
+    // entities.land.duckBlock.obj.material = LogoGradientMaterial;
 
     const genCloudAnimation = (
       dz_min: number,
@@ -387,7 +391,7 @@ export function CreateWorld(
     raycaster.layers.disableAll();
     raycaster.layers.enable(1);
 
-    const duckBlock = entities.land.duckBlock.obj;
+    const duckBlock = entities.land.high.i_block.obj;
 
     duckBlock.layers.enable(1);
 
@@ -395,7 +399,7 @@ export function CreateWorld(
     let duckClicked = false;
     const duck = entities.land.duck.obj;
 
-    const emblem = entities.land.duckBlock.emblem.obj;
+    const emblem = entities.land.duckEmblem.obj;
 
     const emblemMat = (emblem.material as MeshStandardMaterial).clone();
 
@@ -481,7 +485,7 @@ export function CreateWorld(
       raycaster.setFromCamera(mouse, camera);
 
       const intersects = raycaster.intersectObjects(scene.children, true);
-      if (intersects[0]?.object === entities.land.duckBlock.obj) {
+      if (intersects[0]?.object === entities.land.high.i_block.obj) {
         console.log('CLICKED DUCK');
 
         if (duckClicked) return;

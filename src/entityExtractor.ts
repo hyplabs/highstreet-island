@@ -11,39 +11,36 @@ function getObjectByName(root: Object3D, name: string) {
 
 export function entityExtractors(root: Object3D) {
   const land = getObjectByName(root, 'Land');
-  const clouds = getObjectByName(root, 'Clouds');
-  const gift = getObjectByName(root, 'Floating_Gift');
+  const gift = getObjectByName(root, 'Floating_Balloon');
   return {
     land: {
       obj: land,
       high: {
-        obj: getObjectByName(land, 'HighLogo') as Mesh,
+        h1: {obj: getObjectByName(land, "H1") as Mesh},
+        i: {obj: getObjectByName(land, "I") as Mesh},
+        i_block: {obj: getObjectByName(land, "I_Block") as Mesh},
+        g: {obj: getObjectByName(land, "G") as Mesh},
+        h2: {obj: getObjectByName(land, "H2") as Mesh},
       },
-      duckBlock: {
-        obj: getObjectByName(land, 'HighLogoDuckBlock') as Mesh,
-        emblem: {
-          obj: getObjectByName(land, 'HighLogoDuckBlock').getObjectByName(
-            'Emblem'
-          ) as Mesh,
-        },
+      duckEmblem: {
+        obj: getObjectByName(getObjectByName(land, "I_Block"), 'Duck_Emblem') as Mesh,
       },
       duck: {
         obj: getObjectByName(land, 'Duck_Icon') as Mesh,
       },
     },
     clouds: {
-      obj: clouds,
       left: {
-        obj: getObjectByName(clouds, 'Clouds_01'),
+        obj: getObjectByName(root, 'Clouds_01'),
       },
       right: {
-        obj: getObjectByName(clouds, 'Clouds_04'),
+        obj: getObjectByName(root, 'Clouds_04'),
       },
       middle: {
-        obj: getObjectByName(clouds, 'Clouds_03'),
+        obj: getObjectByName(root, 'Clouds_03'),
       },
       top: {
-        obj: getObjectByName(clouds, 'Clouds_02'),
+        obj: getObjectByName(root, 'Clouds_02'),
       },
     },
     rocket: {
@@ -65,7 +62,7 @@ export function entityExtractors(root: Object3D) {
       },
     },
     moon: {
-      obj: getObjectByName(root, 'Moon002'),
+      obj: getObjectByName(root, 'Moon'),
     },
   };
 }

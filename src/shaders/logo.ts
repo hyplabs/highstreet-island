@@ -20,7 +20,7 @@ LogoGradientMaterial.onBeforeCompile = (shader, _) => {
       `#include <begin_vertex>`,
       `
     float extent = 4.0;     
-    heightRatio = (position.x + extent) / (2.0 * extent) + heightOffset;
+    heightRatio = 1.0 - (position.y + extent) / (2.0 * extent) + heightOffset;
    
     #include <begin_vertex>
     float undulate = heightOffset * heightOffset * 3.0;
