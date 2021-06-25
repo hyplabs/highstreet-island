@@ -6,7 +6,6 @@ import {
   Color,
   DirectionalLight,
   HemisphereLight,
-  Material,
   // Line,
   // LineBasicMaterial,
   Mesh,
@@ -399,7 +398,7 @@ export function CreateWorld(
     const emblem = entities.land.duckBlock.emblem.obj;
 
     const emblemMat = (emblem.material as MeshStandardMaterial).clone();
-    
+
     // emblemMat.metalness = 0.8;
 
     emblem.material = emblemMat;
@@ -417,7 +416,6 @@ export function CreateWorld(
     })();
     puppeteer.addAnimation(emblemAnimation);
 
-
     const duckYbias = duck.position.y;
     const duckBlockYbias = duckBlock.position.y;
     const duckSegments: PathSegment[] = [
@@ -434,12 +432,12 @@ export function CreateWorld(
         //duck appears
         startTime: 0.5,
         update: (progress, isStart) => {
-          if(isStart){
+          if (isStart) {
             puppeteer.removeAnimation(emblemAnimation);
           }
           duck.visible = true;
           duck.position.y = duckYbias + progress * 2.5;
-          emblemMat.opacity = 0.3 * ( 1 - progress);
+          emblemMat.opacity = 0.3 * (1 - progress);
         },
       },
       {
