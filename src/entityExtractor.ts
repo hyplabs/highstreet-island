@@ -16,14 +16,17 @@ export function entityExtractors(root: Object3D) {
     land: {
       obj: land,
       high: {
-        h1: {obj: getObjectByName(land, "H1") as Mesh},
-        i: {obj: getObjectByName(land, "I") as Mesh},
-        i_block: {obj: getObjectByName(land, "I_Block") as Mesh},
-        g: {obj: getObjectByName(land, "G") as Mesh},
-        h2: {obj: getObjectByName(land, "H2") as Mesh},
+        h1: { obj: getObjectByName(land, 'H1') as Mesh },
+        i: { obj: getObjectByName(land, 'I') as Mesh },
+        i_block: { obj: getObjectByName(land, 'I_Block') as Mesh },
+        g: { obj: getObjectByName(land, 'G') as Mesh },
+        h2: { obj: getObjectByName(land, 'H2') as Mesh },
       },
       duckEmblem: {
-        obj: getObjectByName(getObjectByName(land, "I_Block"), 'Duck_Emblem') as Mesh,
+        obj: getObjectByName(
+          getObjectByName(land, 'I_Block'),
+          'Duck_Emblem'
+        ) as Mesh,
       },
       duck: {
         obj: getObjectByName(land, 'Duck_Icon') as Mesh,
