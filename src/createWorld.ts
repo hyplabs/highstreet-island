@@ -57,8 +57,8 @@ export function CreateWorld(
     renderer.setSize(w, h);
 
     camera.aspect = w / h;
-    camera.fov = 70;
-    camera.position.set(-80, 25, 0);
+    camera.fov = 66;
+    camera.position.set(-70, 20, 0);
     camera.updateProjectionMatrix();
   };
 
@@ -520,6 +520,9 @@ export function CreateWorld(
     entities.floatingGift.obj.children.forEach(child => {
       child.applyMatrix4(parentToGift);
     });
+
+    // shift balloon right ward so it's closer
+    entities.floatingGift.obj.position.z -= 5;
 
     const balloonController = new ProportionalController(3, 10, 0);
 
