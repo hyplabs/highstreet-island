@@ -1,6 +1,7 @@
 html, body{
     padding: 0 !important;
     margin: 0 !important;
+    overflow: hidden;
 }
 
 #root{
@@ -14,4 +15,3 @@ html, body{
     justify-content: center;
     align-items: center;
 }
-
