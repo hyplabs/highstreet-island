@@ -34,13 +34,13 @@ export function entityExtractors(root: Object3D) {
     },
     clouds: {
       left: {
-        obj: getObjectByName(root, 'Clouds_01'),
+        obj: getObjectByName(root, 'Clouds_03'),
       },
       right: {
         obj: getObjectByName(root, 'Clouds_04'),
       },
       middle: {
-        obj: getObjectByName(root, 'Clouds_03'),
+        obj: getObjectByName(root, 'Clouds_01'),
       },
       top: {
         obj: getObjectByName(root, 'Clouds_02'),
