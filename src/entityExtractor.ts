@@ -31,6 +31,9 @@ export function entityExtractors(root: Object3D) {
       duck: {
         obj: getObjectByName(land, 'Duck_Icon') as Mesh,
       },
+      duckClicked: {
+        obj: getObjectByName(land, 'Duck_Icon_Clicked') as Mesh,
+      },
     },
     clouds: {
       left: {

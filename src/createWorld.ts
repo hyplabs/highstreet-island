@@ -382,31 +382,24 @@ export function CreateWorld(
       // },
     ];
 
-    const raycaster = new Raycaster();
-    const mouse = new Vector2();
-
-    raycaster.layers.enableAll();
-
-    //set clickable objects
-    raycaster.layers.disableAll();
-    raycaster.layers.enable(1);
-
+   
     const duckBlock = entities.land.high.i_block.obj;
-
-    duckBlock.layers.enable(1);
-
     // duck mario
+    // all ducks share same material
     let duckClicked = false;
     const duck = entities.land.duck.obj;
-
+    const duckFomo = entities.land.duckClicked.obj;
+    duckFomo.visible = false;
     const emblem = entities.land.duckEmblem.obj;
-
-    const emblemMat = (emblem.material as MeshStandardMaterial).clone();
+    const duckMaterial = emblem.material as MeshStandardMaterial;
+    duckMaterial.alphaTest = 0.01;
+    duckMaterial.transparent = true;
+    const customDuckEmblemMaterial = (emblem.material as MeshStandardMaterial).clone();
 
     // emblemMat.metalness = 0.8;
 
-    emblem.material = emblemMat;
-    emblemMat.transparent = true;
+    emblem.material = customDuckEmblemMaterial;
+    customDuckEmblemMaterial.transparent = true;
     duck.position.x -= 1;
 
     // duck emblem
@@ -414,7 +407,7 @@ export function CreateWorld(
       // rocking island animation
       return {
         update: (_: number, elapsedTime: number) => {
-          emblemMat.opacity = 0.3 + 0.2 * Math.abs(Math.sin(elapsedTime * 3));
+          customDuckEmblemMaterial.opacity = 0.3 + 0.2 * Math.abs(Math.sin(elapsedTime * 3));
         },
       };
     })();
@@ -440,8 +433,12 @@ export function CreateWorld(
             puppeteer.removeAnimation(emblemAnimation);
           }
           duck.visible = true;
-          duck.position.y = duckYbias + progress * 2.5;
-          emblemMat.opacity = 0.3 * (1 - progress);
+          duck.position.y = duckYbias + progress * 4;
+          duck.scale.setScalar(1 + progress * progress * 1.7); // ease in scale 
+          customDuckEmblemMaterial.opacity = 0.3 * (1 - progress);
+
+          duckFomo.position.copy(duck.position);
+          duckFomo.scale.copy(duck.scale);
         },
       },
       {
@@ -472,7 +469,18 @@ export function CreateWorld(
       };
     })();
 
-    canvas.addEventListener('click', e => {
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
+
+    raycaster.layers.enableAll();
+
+    //set clickable objects
+    raycaster.layers.disableAll();
+    raycaster.layers.enable(1);
+    duckBlock.layers.enable(1);
+    duck.layers.enable(1);
+
+    canvas.addEventListener('mousedown', e => {
       const rect = canvas.getBoundingClientRect();
       const dx = e.clientX - rect.left;
       const dy = e.clientY - rect.top;
@@ -486,14 +494,22 @@ export function CreateWorld(
 
       const intersects = raycaster.intersectObjects(scene.children, true);
       if (intersects[0]?.object === entities.land.high.i_block.obj) {
-        console.log('CLICKED DUCK');
-
         if (duckClicked) return;
         duckClicked = true;
 
         puppeteer.addAnimation(duckAnimation);
       }
+      else if (intersects[0]?.object === duck) {
+        duck.visible = false;
+        duckFomo.visible = !duck.visible;
+      }
     });
+
+    document.addEventListener('mouseup', () => {
+      duck.visible = true;
+      duckFomo.visible = !duck.visible;
+    });
+
 
     const segmentedRocketAnimation = segmentedAnimation(rocketSegments);
     const rocketAnimation = (() => {
