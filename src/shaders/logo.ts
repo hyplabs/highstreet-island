@@ -6,6 +6,9 @@ LogoGradientMaterial.userData = {
     value: 0,
   },
 };
+
+// LogoGradientMaterial.emissive = new Color(0x333333)
+// LogoGradientMaterial.metalness = 0.4;
 LogoGradientMaterial.onBeforeCompile = (shader, _) => {
   shader.vertexShader = shader.vertexShader
     .replace(
@@ -49,7 +52,7 @@ LogoGradientMaterial.onBeforeCompile = (shader, _) => {
         value: new Color(0x00f2fe),
       },
       colorTop: {
-        value: new Color(0x694bfa),
+        value: new Color(0x2431e5),
       },
       opacity: {
         value: 0.8,
