@@ -382,7 +382,6 @@ export function CreateWorld(
       // },
     ];
 
-   
     const duckBlock = entities.land.high.i_block.obj;
     // duck mario
     // all ducks share same material
@@ -407,7 +406,8 @@ export function CreateWorld(
       // rocking island animation
       return {
         update: (_: number, elapsedTime: number) => {
-          customDuckEmblemMaterial.opacity = 0.3 + 0.2 * Math.abs(Math.sin(elapsedTime * 3));
+          customDuckEmblemMaterial.opacity =
+            0.3 + 0.2 * Math.abs(Math.sin(elapsedTime * 3));
         },
       };
     })();
@@ -434,7 +434,7 @@ export function CreateWorld(
           }
           duck.visible = true;
           duck.position.y = duckYbias + progress * 4;
-          duck.scale.setScalar(1 + progress * progress * 1.7); // ease in scale 
+          duck.scale.setScalar(1 + progress * progress * 1.7); // ease in scale
           customDuckEmblemMaterial.opacity = 0.3 * (1 - progress);
 
           duckFomo.position.copy(duck.position);
@@ -498,8 +498,7 @@ export function CreateWorld(
         duckClicked = true;
 
         puppeteer.addAnimation(duckAnimation);
-      }
-      else if (intersects[0]?.object === duck) {
+      } else if (intersects[0]?.object === duck) {
         duck.visible = false;
         duckFomo.visible = !duck.visible;
       }
@@ -509,7 +508,6 @@ export function CreateWorld(
       duck.visible = true;
       duckFomo.visible = !duck.visible;
     });
-
 
     const segmentedRocketAnimation = segmentedAnimation(rocketSegments);
     const rocketAnimation = (() => {
