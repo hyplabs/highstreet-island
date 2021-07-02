@@ -13,8 +13,13 @@ The `site` folder sets up a viewport responsive animation with transparent backg
 
 Set `yarn build; cd site; yarn install; yarn build` as the build command if deploying to Netlify, etc. 
 
-You can also deploy as a package via `npm publish`. 
+You can also deploy as a package via `npm publish` and consume in your React app directly. You will need to generate a Github token with package publishing permissions and a `.npmrc` 
+that looks something like.
 
+```
+@hyplabs:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR TOKEN HERE
+```
 
 # TSDX React User Guide
 
