@@ -3,6 +3,7 @@ export interface PathSegment {
   update: (progress: number, isStart: boolean) => void;
 }
 
+// helper for animating predefined sequence of animations
 export function segmentedAnimation(segments: PathSegment[]) {
   let lastSegment: PathSegment | null = null;
   function getActiveSegment(tCycle: number) {
@@ -25,7 +26,6 @@ export function segmentedAnimation(segments: PathSegment[]) {
     if (lastSegment !== activeSegment) {
       lastSegment = activeSegment;
     }
-    // throttleLog(cycleProgress);
   }
 
   return animateRocket;

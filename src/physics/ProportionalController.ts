@@ -51,18 +51,12 @@ export class ProportionalController {
       this._x += this._v * dt;
       this._v += (correctiveAction + -this.damp * this._v) * dt;
 
-      // let avgError = this.avgError.update(error);
-
       if (
         Math.abs(this._x) < PHYS_EPSILON &&
         Math.abs(this._v) < PHYS_EPSILON
       ) {
         this.active = false;
       }
-
-      // if(Math.abs(avgError) < 0.000001){
-      //     this.active = false;
-      // }
 
       if (origDt) {
         return this.step(origDt - MAX_DT);

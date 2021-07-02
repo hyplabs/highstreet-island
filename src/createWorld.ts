@@ -1,13 +1,10 @@
 import {
   BoxBufferGeometry,
-  // BufferGeometry,
   CatmullRomCurve3,
   Clock,
   Color,
   DirectionalLight,
   HemisphereLight,
-  // Line,
-  // LineBasicMaterial,
   Mesh,
   MeshStandardMaterial,
   Object3D,
@@ -18,18 +15,17 @@ import {
   sRGBEncoding,
   Vector2,
   Vector3,
-  // Vector3,
   WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { entityExtractors } from './entityExtractor';
 import { Puppeteer } from './Puppeteer';
-import { segmentedAnimation, PathSegment } from './segmentedAnimation';
+import { PathSegment, segmentedAnimation } from './segmentedAnimation';
 import { LogoGradientMaterial } from './shaders/logo';
 import { ProportionalController } from './physics/ProportionalController';
 import { easeInOutCubic, easeOutQuadratic } from './util/easingFunctions';
-// import { throttleLog } from './util/throttleLog';
+import { linterp } from './util/linterp';
 
 export type WorldConfig = {
   gltfPath: string;
@@ -40,15 +36,13 @@ export function CreateWorld(
   parent: HTMLDivElement,
   config: WorldConfig
 ) {
+  /*
+  SETUP
+   */
   const camera = new PerspectiveCamera();
-  camera.rotateY(degToRad(-90)); //rotate camera to face island
+  camera.rotateY(degToRad(-90)); // rotate camera to face island
 
-  //AXIS FOR OUR WORLD
-
-  // X -> Inward toward island
-  // Y -> Up
-  // Z -> Right
-
+  // resize renderer when viewport resized
   const onResize = () => {
     const w = parent.clientWidth;
     const h = parent.clientHeight;
@@ -73,14 +67,11 @@ export function CreateWorld(
     let boxBufferGeometry = new BoxBufferGeometry();
     const standard = new Mesh(boxBufferGeometry, new MeshStandardMaterial());
     const logo = new Mesh(boxBufferGeometry, LogoGradientMaterial);
-
     standard.position.set(1000, 1000, 1000);
     logo.position.set(1000, 1000, 1000);
     scene.add(standard);
     scene.add(logo);
-    console.log('PRECOMPILE SHADERS');
     renderer.compile(scene, camera);
-
     scene.remove(standard);
     scene.remove(logo);
   }
@@ -93,8 +84,9 @@ export function CreateWorld(
 
     const island = gltf.scene.getObjectByName('Island_v3');
     if (!island) throw new Error('Mesh not found');
-    island.rotateY(degToRad(180));
 
+    // rotate island to face camera
+    island.rotateY(degToRad(180));
     const entities = entityExtractors(island);
 
     // use custom shader for logo
@@ -103,8 +95,10 @@ export function CreateWorld(
     entities.land.high.i.obj.material = LogoGradientMaterial;
     entities.land.high.i_block.obj.material = LogoGradientMaterial;
     entities.land.high.g.obj.material = LogoGradientMaterial;
-    // entities.land.duckBlock.obj.material = LogoGradientMaterial;
 
+    /*
+    CLOUDS
+     */
     const genCloudAnimation = (
       dz_min: number,
       dz_max: number,
@@ -122,7 +116,6 @@ export function CreateWorld(
         },
       };
     };
-
     puppeteer.addAnimation(
       genCloudAnimation(0, -80, 0.07, entities.clouds.left.obj)
     );
@@ -136,6 +129,9 @@ export function CreateWorld(
       genCloudAnimation(-20, 40, 0.08, entities.clouds.middle.obj)
     );
 
+    /*
+    LOGO
+     */
     const gradientAnimation = (() => {
       return {
         update: (_: number, elapsed: number) => {
@@ -144,7 +140,11 @@ export function CreateWorld(
         },
       };
     })();
+    puppeteer.addAnimation(gradientAnimation);
 
+    /*
+    LAND
+     */
     const islandAnimation = (() => {
       // rocking island animation
       const landObj = entities.land.obj;
@@ -161,20 +161,17 @@ export function CreateWorld(
       };
     })();
     puppeteer.addAnimation(islandAnimation);
-    puppeteer.addAnimation(gradientAnimation);
 
+    /*
+    ROCKET
+     */
     const rocket = entities.rocket.obj;
     function initRocket() {
       rocket.rotation.set(0, 0, 0);
       rocket.scale.setScalar(0.75);
       rocket.position.set(20, 1, -17);
     }
-
     initRocket();
-
-    function linterp(from: number, to: number, progress: number) {
-      return (1 - progress) * from + to * progress;
-    }
 
     const moon = entities.moon.obj;
 
@@ -194,7 +191,8 @@ export function CreateWorld(
     ];
 
     const curve = new CatmullRomCurve3(points);
-    // FOR VISUALIZING CURVE
+
+    // UNCOMMENT TO VISUALIZE CURVE
     // const geometry = new BufferGeometry().setFromPoints(curve.getPoints(50));
     // const material = new LineBasicMaterial({ color: 0xff0000 });
     // const curveObject = new Line(geometry, material);
@@ -210,7 +208,7 @@ export function CreateWorld(
         },
       },
       {
-        //launch
+        //launch trajectory
         startTime: 1,
         update: progress => {
           curve.getPointAt(progress, rocket.position);
@@ -219,6 +217,7 @@ export function CreateWorld(
         },
       },
       {
+        //reorient for entry
         startTime: 3,
         update: (() => {
           let initialX = 0;
@@ -230,35 +229,25 @@ export function CreateWorld(
               initialRotation.copy(rocket.quaternion);
             }
 
-            // moon.position.x = rocket.position.x;
             const moonToRocket = moon.position
               .clone()
               .sub(rocket.position)
               .normalize();
-            // moonToRocket.x = 0; //zero out depth difference
             const tangentDir = moonToRocket.cross(new Vector3(1, 0, 0));
-            // const tangentDirQuat = new Quaternion().setFromUnitVectors
             const quatToAlign = new Quaternion().setFromUnitVectors(
               new Vector3(0, 1, 0),
               tangentDir
             );
-            // rocket.quaternion.copy(quatToAlign);
 
             rocket.position.x = linterp(initialX, -80, progress);
             rocket.quaternion.copy(
               initialRotation.clone().slerp(quatToAlign, progress)
             );
-
-            //
-            // rocket.position.x = 0.1 * (-80) + ( 1- 0.1) * rocket.position.x;
-            // rocket.quaternion.slerp(quatToAlign, 0.1);
-            // const forward = new Vector3(0, 1, 0).applyQuaternion(rocket.quaternion);
-            // rocket.position.add(forward.setScalar(-0.5));
-            // // rocket.position.add(rocket.axi)
           };
         })(),
       },
       {
+        //revolve around moon
         startTime: 3.2,
         update: (() => {
           let initialAngle = 0;
@@ -317,7 +306,6 @@ export function CreateWorld(
                 .clone()
                 .slerp(quatToAlign, Math.min(fastProgress * 2, 1))
             );
-            // rocket.quaternion.slerp(quatToAlign, 0.1);
 
             rocket.position.copy(
               initialRocketPosition
@@ -370,40 +358,39 @@ export function CreateWorld(
         startTime: 8,
         update: () => {},
       },
-      // {
-      //   //stop
-      //   startTime: 7,
-
-      // },
-      // {
-      //   //stop
-      //   startTime: 9,
-      //   update: () => {},
-      // },
     ];
+    const segmentedRocketAnimation = segmentedAnimation(rocketSegments);
+    const rocketAnimation = (() => {
+      let elapsedTime = 0;
+      return {
+        update: (dt: number) => {
+          segmentedRocketAnimation(elapsedTime);
+          elapsedTime += Math.min(dt, 0.033); //throttle dt
+        },
+      };
+    })();
 
+    setTimeout(() => {
+      puppeteer.addAnimation(rocketAnimation);
+    }, 500);
+
+    /*
+    DUCK
+     */
     const duckBlock = entities.land.high.i_block.obj;
-    // duck mario
-    // all ducks share same material
-    let duckClicked = false;
     const duck = entities.land.duck.obj;
     const duckFomo = entities.land.duckClicked.obj;
-    duckFomo.visible = false;
     const emblem = entities.land.duckEmblem.obj;
+
+    duckFomo.visible = false;
     const duckMaterial = emblem.material as MeshStandardMaterial;
     duckMaterial.alphaTest = 0.01;
     duckMaterial.transparent = true;
     const customDuckEmblemMaterial = (emblem.material as MeshStandardMaterial).clone();
-
-    // emblemMat.metalness = 0.8;
-
     emblem.material = customDuckEmblemMaterial;
-    customDuckEmblemMaterial.transparent = true;
     duck.position.x -= 1;
 
-    // duck emblem
     const emblemAnimation = (() => {
-      // rocking island animation
       return {
         update: (_: number, elapsedTime: number) => {
           customDuckEmblemMaterial.opacity =
@@ -472,14 +459,15 @@ export function CreateWorld(
     const raycaster = new Raycaster();
     const mouse = new Vector2();
 
+    // configure raycster
     raycaster.layers.enableAll();
-
-    //set clickable objects
     raycaster.layers.disableAll();
     raycaster.layers.enable(1);
     duckBlock.layers.enable(1);
     duck.layers.enable(1);
 
+    //click block/duck
+    let duckClicked = false;
     canvas.addEventListener('mousedown', e => {
       const rect = canvas.getBoundingClientRect();
       const dx = e.clientX - rect.left;
@@ -509,23 +497,9 @@ export function CreateWorld(
       duckFomo.visible = !duck.visible;
     });
 
-    const segmentedRocketAnimation = segmentedAnimation(rocketSegments);
-    const rocketAnimation = (() => {
-      // rocking island animation
-      let elapsedTime = 0;
-      return {
-        update: (dt: number) => {
-          segmentedRocketAnimation(elapsedTime);
-          elapsedTime += Math.min(dt, 0.033); //throttle dt
-        },
-      };
-    })();
-
-    setTimeout(() => {
-      puppeteer.addAnimation(rocketAnimation);
-    }, 500);
-
-    //gift
+    /*
+    GIFT
+     */
 
     //recenter pivot to be at the balloons
     const parentToGift = entities.floatingGift.highstreet.obj.matrix
@@ -567,7 +541,10 @@ export function CreateWorld(
     })();
     puppeteer.addAnimation(giftAnimation);
 
-    //gradually fade in island
+    /*
+    ISLAND FADE IN
+     */
+
     const fadeIn = (() => {
       const fadeInTime = 1.3;
       let elapsed = 0;
@@ -591,13 +568,12 @@ export function CreateWorld(
         },
       };
     })();
-
     puppeteer.addAnimation(fadeIn);
-
-    // setTimeout(() => {
-    //   puppeteer.addAnimation(fadeIn)
-    // }, 500)
   })();
+
+  /*
+  RENDERER SETUP
+   */
 
   const renderer = new WebGLRenderer({
     canvas: canvas,
@@ -605,9 +581,12 @@ export function CreateWorld(
     alpha: true,
   });
   renderer.setClearColor(0x000000, 0); // the default
-
   renderer.outputEncoding = sRGBEncoding;
   renderer.gammaFactor = 2.2;
+
+  /*
+  LIGHTING
+   */
 
   // Hemisphere light for subtle gradient
   scene.add(
@@ -627,7 +606,10 @@ export function CreateWorld(
   directionalLight.position.set(-8, 29, -25);
   scene.add(directionalLight);
 
-  // render loop
+  /*
+  RENDER LOOP
+   */
+
   const clock = new Clock();
   let frameHandle = 0;
   const animate = function() {
@@ -636,7 +618,6 @@ export function CreateWorld(
     renderer.render(scene, camera);
   };
   animate();
-
   prewarm();
 
   // cleanup function

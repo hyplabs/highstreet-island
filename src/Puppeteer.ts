@@ -6,6 +6,9 @@ export interface Animateable {
   update: (dt: number, elapsed: number) => void;
 }
 
+/**
+ * Animation controller
+ */
 export class Puppeteer {
   animateables: Animateable[] = [];
   addAnimation(animateable: Animateable) {

@@ -1,5 +1,7 @@
 import { Color, MeshStandardMaterial, UniformsUtils } from 'three';
 
+
+// Shader for logo that provides gradient animations
 export const LogoGradientMaterial = new MeshStandardMaterial();
 LogoGradientMaterial.userData = {
   heightOffset: {
@@ -7,9 +9,8 @@ LogoGradientMaterial.userData = {
   },
 };
 
-// LogoGradientMaterial.emissive = new Color(0x333333)
-// LogoGradientMaterial.metalness = 0.4;
 LogoGradientMaterial.onBeforeCompile = (shader, _) => {
+  // subtle grow-shrink mesh on z axis
   shader.vertexShader = shader.vertexShader
     .replace(
       `#include <common>`,
@@ -30,6 +31,8 @@ LogoGradientMaterial.onBeforeCompile = (shader, _) => {
     transformed = vec3(position.x, position.y, position.z + normal.z * undulate);
     `
     );
+
+  // set color based on height
   shader.fragmentShader = shader.fragmentShader
     .replace(
       `vec4 diffuseColor = vec4( diffuse, opacity );`,
@@ -53,10 +56,7 @@ LogoGradientMaterial.onBeforeCompile = (shader, _) => {
       },
       colorTop: {
         value: new Color(0x2431e5),
-      },
-      opacity: {
-        value: 0.8,
-      },
+      }
     },
   ]);
   shader.uniforms.heightOffset = LogoGradientMaterial.userData.heightOffset;

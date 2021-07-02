@@ -1,3 +1,21 @@
+# Highstreet Island
+Animated island for Highstreet Splash Page.
+
+## Development
+
+1. `yarn start` 
+2. `cd example; yarn start` (may have to run `yarn install` first)
+3. View the island at `localhost:1234`
+
+## Deployment
+
+The `site` folder sets up a viewport responsive animation with transparent background that can be easily iframed.
+
+Set `yarn build; cd site; yarn install; yarn build` as the build command if deploying to Netlify, etc. 
+
+You can also deploy as a package via `npm publish`. 
+
+
 # TSDX React User Guide
 
 Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
