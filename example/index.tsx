@@ -24,7 +24,7 @@ const App = () => {
         width: "100vw",
         height: "min(80vw, 100vh)"
       }} worldConfig={{
-        gltfPath: "islandSimp.glb"
+        gltfPath: "island.glb"
       }}/>
     </div>
   );
