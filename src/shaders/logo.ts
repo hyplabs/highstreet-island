@@ -1,6 +1,5 @@
 import { Color, MeshStandardMaterial, UniformsUtils } from 'three';
 
-
 // Shader for logo that provides gradient animations
 export const LogoGradientMaterial = new MeshStandardMaterial();
 LogoGradientMaterial.userData = {
@@ -56,7 +55,7 @@ LogoGradientMaterial.onBeforeCompile = (shader, _) => {
       },
       colorTop: {
         value: new Color(0x2431e5),
-      }
+      },
     },
   ]);
   shader.uniforms.heightOffset = LogoGradientMaterial.userData.heightOffset;
